@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>従業員一覧</title>
+  <link rel="stylesheet" href="employee-viewer.css" />
+</head>
+<body>
+  <h2>従業員一覧</h2>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <span id="count">0 件</span>
+      <span id="total"></span>
+      <select id="locationFilter">
+        <option value="">全事業所</option>
+      </select>
+    </div>
+    <div class="topbar-right">
+      <button type="button" id="btnPrev" disabled>◀ 前へ</button>
+      <span id="pageInfo"></span>
+      <button type="button" id="btnNext">次へ ▶</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th data-key="fullName">氏名</th>
+        <th data-key="location">事業所略名</th>
+        <th data-key="status">在籍</th>
+        <th data-key="joinDate">入社年月日</th>
+        <th data-key="leaveDate">退職年月日</th>
+        <th class="no-sort col-actions"></th>
+        <!-- <th class="no-sort col-delete"></th> -->
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="empty">データがありません。</div>
+  <div id="deleteModal">
+    <div class="modal-box">
+      <p>レコードを削除します。<br>よろしいでしょうか？</p>
+      <div class="modal-btns">
+        <button type="button" class="btn-yes" id="btnDeleteYes">はい</button>
+        <button type="button" class="btn-no" id="btnDeleteNo">いいえ</button>
+      </div>
+    </div>
+  </div>
+  <div id="editModal">
+    <div class="modal-box modal-box--form">
+      <h3 class="modal-title">レコードを編集</h3>
+      <div class="edit-form">
+        <label class="edit-label">氏名</label>
+        <input type="text" id="editFullName" class="edit-input" autocomplete="off" />
+
+        <label class="edit-label">事業所略名</label>
+        <input type="text" id="editLocation" class="edit-input" autocomplete="off" />
+
+        <!-- 在籍フラグは計算フィールドのため更新対象外。在籍区分など保存フィールドで編集可能にしたら復帰する。
+        <label class="edit-label">在籍</label>
+        <select id="editStatus" class="edit-input">
+          <option value="1">在籍</option>
+          <option value="0">退職</option>
+        </select>
+        -->
+
+        <label class="edit-label">入社年月日</label>
+        <input type="text" id="editJoinDate" class="edit-input" placeholder="YYYY/MM/DD" autocomplete="off" />
+
+        <label class="edit-label">退職年月日</label>
+        <input type="text" id="editLeaveDate" class="edit-input" placeholder="YYYY/MM/DD または空" autocomplete="off" />
+      </div>
+      <div class="modal-btns modal-btns--form">
+        <button type="button" class="btn-save" id="btnEditSave" title="保存">💾 保存</button>
+        <button type="button" class="btn-cancel" id="btnEditCancel" title="キャンセル">✕ キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="employee-viewer.js"></script>
+</body>
+</html>
