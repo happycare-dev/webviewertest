@@ -1,0 +1,23 @@
+# GetData in file WebViewerTest
+
+Set Variable [ $json ; Value: Get ( ScriptParameter ) ]
+Set Variable [ $offset ; Value: JSONGetElement ( $json ; "offset" ) + 1 ]
+// Set Variable [ $limit ; Value: Int( JSONGetElement( $json; "limit" ) / 2 ) ]
+Set Variable [ $limit ; Value: JSONGetElement ( $json ; "limit" ) ]
+Set Variable [ $sortField ; Value: JSONGetElement ( $json ; "sortField" ) ]
+Set Variable [ $sortOrder ; Value: JSONGetElement ( $json ; "sortOrder" ) ]
+Set Variable [ $locationFilter ; Value: JSONGetElement ( $json ; "locationFilter" ) ]
+Set Variable [ $request ; Value: JSONSetElement ( "" ;         [ "layouts" ; "EmployeeM" ; JSONString ] ;         [ "offset"  ; $offset      ; JSONNumber ] ;         [ "limit"   ; $limit       ; JSONNumber ]     ) ]
+If [ not IsEmpty (  $sortField ) ]
+	Set Variable [ $request ; Value: JSONSetElement( 	$request; 	[ "sort[0].fieldName"; $sortField; JSONString ]; 	[ "sort[0].sortOrder"; $sortOrder; JSONString ] ) ]
+End If
+If [ not IsEmpty( $locationFilter ) and $locationFilter ≠ "?" ]
+	Set Variable [ $request ; Value: JSONSetElement( 	$request; 	[ "query[0].事業所略称"; $locationFilter; JSONString ] ) ]
+End If
+// Set Variable [ $firstRecord ; Value: JSONGetElement ( $result ; "response.data[0].fieldData" ) ]
+// Show Custom Dialog [ "fieldData keys" ; $firstRecord ]
+# 
+Execute FileMaker Data API [ Select ; Target: $result ; $request ]
+# 
+Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
+Exit Script [ Text Result: True ]

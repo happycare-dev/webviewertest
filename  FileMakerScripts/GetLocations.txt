@@ -1,0 +1,23 @@
+# GetLocations in file WebViewerTest
+
+Set Variable [ $raw ; Value: ExecuteSQL( 	"SELECT DISTINCT \"事業所略称\" FROM \"EmployeeM\" ORDER BY \"事業所略称\"" 	; "" 	; "¶" ) ]
+# 
+Set Variable [ $json ; Value: "{\"locations\":[]}" ]
+Set Variable [ $i ; Value: 1 ]
+Set Variable [ $idx ; Value: 0 ]
+# 
+Loop [ Flush: Always ]
+	Set Variable [ $loc ; Value: GetValue ( $raw ; $i ) ]
+	Exit Loop If [ $i > ValueCount ( $raw ) ]
+	// Exit Loop If [ IsEmpty ( $loc ) ]
+	If [ not IsEmpty( $loc ) and $loc ≠ "?" ]
+		Set Variable [ $json ; Value: JSONSetElement( $json; "locations[" & $idx & "]"; $loc; JSONString ) ]
+		Set Variable [ $idx ; Value: $idx + 1 ]
+	End If
+	// Set Variable [ $json ; Value: JSONSetElement( $json; 	"locations[" &( $i - 1 ) & "]"; $loc; JSONString ) ]
+	Set Variable [ $i ; Value: $i + 1 ]
+End Loop
+# 
+Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLocations" ; Parameters: $json ]
+# 
+Exit Script [ Text Result: True ]

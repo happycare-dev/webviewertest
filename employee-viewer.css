@@ -100,6 +100,18 @@ th.col-delete {
   width: 48px;
 }
 
+th.col-num,
+td.col-num {
+  width: 2.75rem;
+  text-align: right;
+  color: #666;
+  font-variant-numeric: tabular-nums;
+}
+
+th.col-num {
+  color: #333;
+}
+
 .btn-delete {
   background: none;
   border: none;
@@ -112,6 +124,16 @@ th.col-delete {
 
 .btn-delete:hover {
   background: #ffe0e0;
+}
+
+/* Selected row while Edit or Delete is in use */
+#tbody tr.row-selected td {
+  background: #e3f2fd;
+  box-shadow: inset 3px 0 0 #1976d2;
+}
+
+#tbody tr.row-selected:hover td {
+  background: #bbdefb;
 }
 
 #empty {
@@ -140,6 +162,37 @@ th.col-delete {
   min-width: 280px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.modal-drag-handle {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  height: 22px;
+  margin: -28px -32px 14px -32px;
+  padding: 0 12px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #eceff1 0%, #e0e4e8 100%);
+  color: #90a4ae;
+  font-size: 11px;
+  line-height: 22px;
+  letter-spacing: 3px;
+  text-align: center;
+}
+
+.modal-drag-handle::before {
+  content: '···';
+  letter-spacing: 4px;
+}
+
+.modal-drag-handle:active {
+  cursor: grabbing;
+}
+
+.modal-box--form .modal-drag-handle {
+  margin: -24px -28px 10px -28px;
 }
 
 .modal-box p {
@@ -230,6 +283,7 @@ th.col-actions {
   margin: 0 0 16px;
   font-size: 16px;
   font-weight: 600;
+  clear: both;
 }
 
 .edit-form {

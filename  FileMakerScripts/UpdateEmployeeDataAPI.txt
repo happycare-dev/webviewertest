@@ -1,0 +1,44 @@
+# UpdateEmployeeDataAPI in file WebViewerTest
+# Script parameter (JSON from Web Viewer), example:
+#   { "recordId":"204", "modId":"5", "fieldData": { "氏名":"...", "事業所略称":"...", "入社　年月日":"1/15/2020", "退職　年月日":"" } }
+#   （在籍フラグは計算のため送らない。保存フィールドで編集する場合は下の 在籍フラグ 行を復帰）
+# recordId = FileMaker Data API internal record id.
+#
+# Note: Error 1708 often occurs when passing JSONGetElement ( $param ; "fieldData" ) directly
+# into JSONSetElement ... JSONObject. Building fieldData from each key avoids that.
+
+Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
+Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
+#
+If [ IsEmpty ( $recordId ) ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "3" ; JSONString ] ; [ "messages[0].message" ; "recordId is required" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUpdateResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+#
+# Build fieldData object explicitly (paths must match keys sent from Web Viewer).
+# Field names use full-width space (U+3000) in 入社／退職 date fields, same as Data API read.
+# 在籍フラグは計算のため含めない。保存用フィールドで編集する場合は次行を $fd の JSONSetElement に追加:
+#   [ "在籍フラグ" ; JSONGetElement ( $param ; "fieldData.在籍フラグ" ) ; JSONString ] ;
+Set Variable [ $fd ; Value: JSONSetElement ( "{}" ;
+	[ "氏名" ; JSONGetElement ( $param ; "fieldData.氏名" ) ; JSONString ] ;
+	[ "事業所略称" ; JSONGetElement ( $param ; "fieldData.事業所略称" ) ; JSONString ] ;
+	[ "入社　年月日" ; JSONGetElement ( $param ; "fieldData.入社　年月日" ) ; JSONString ] ;
+	[ "退職　年月日" ; JSONGetElement ( $param ; "fieldData.退職　年月日" ) ; JSONString ]
+) ]
+#
+Set Variable [ $request ; Value: JSONSetElement ( "{}" ; [ "action" ; "update" ; JSONString ] ; [ "layouts" ; "EmployeeM" ; JSONString ] ; [ "recordId" ; $recordId ; JSONString ] ; [ "fieldData" ; $fd ; JSONObject ] ) ]
+# modId must be an integer 1 … 72624976668147839; "0" or empty → omit (otherwise error 1708).
+If [ GetAsNumber ( JSONGetElement ( $param ; "modId" ) ) > 0 ]
+	Set Variable [ $request ; Value: JSONSetElement ( $request ; [ "modId" ; JSONGetElement ( $param ; "modId" ) ; JSONString ] ) ]
+End If
+#
+# Error 201 "Field cannot be modified" → fields often have "Prohibit modification of value during data entry"
+# or strict validation. options.prohibitmode / entrymode "script" lets this script step override (per Claris help).
+Set Variable [ $opts ; Value: JSONSetElement ( "{}" ; [ "entrymode" ; "script" ; JSONString ] ; [ "prohibitmode" ; "script" ; JSONString ] ) ]
+Set Variable [ $request ; Value: JSONSetElement ( $request ; [ "options" ; $opts ; JSONObject ] ) ]
+#
+Execute FileMaker Data API [ Select ; Target: $result ; $request ]
+#
+Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUpdateResult" ; Parameters: $result ]
+Exit Script [ Text Result: True ]

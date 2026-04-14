@@ -1,0 +1,38 @@
+# DeleteRecord in file WebViewerTest
+#
+# ─── 以前: レイアウト移動 + 検索 + Delete Record/Request（recordId は業務キー ID を想定していた）───
+# （以下は FileMaker に貼る際はコメント扱いにするか削除。参照用に残す）
+#
+# Set Variable [ $recordId ; Value: JSONGetElement ( Get(ScriptParameter) ; "recordId" ) ]
+# Set Variable [ $originalLayout ; Value: Get (LayoutName) ]
+# Enter Find Mode [ Pause: Off ]
+# Go to Layout [ “EmployeeM” (EmployeeM) ; Animation: None ]
+# Set Field [ EmployeeM::ID ; $recordId ]
+# Set Error Capture [ On ]
+# Perform Find []
+# If [ Get ( LastError ) = 0 ]
+# 	Delete Record/Request [ With dialog: Off ]
+# 	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; "success" ; True ; JSONBoolean ) ]
+# Else
+# 	Set Variable [ $result ; Value: JSONSetElement( "{}"; [ "success"; False; JSONBoolean ]; [ "message"; "Record not found: " & Get( LastError ); JSONString ] ) ]
+# End If
+# Go to Layout [ $originalLayout ; Animation: None ]
+#
+# ─── 現在: Execute FileMaker Data API（action: delete）───
+# Web Viewer からのパラメータ JSON: { "recordId": "1132" }
+# recordId = Data API の内部レコード ID（apiRecordId）。業務キー ID ではない。
+
+Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
+Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
+#
+If [ IsEmpty ( $recordId ) ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "3" ; JSONString ] ; [ "messages[0].message" ; "recordId is required" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDeleteResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+#
+Set Variable [ $request ; Value: JSONSetElement ( "{}" ; [ "action" ; "delete" ; JSONString ] ; [ "layouts" ; "EmployeeM" ; JSONString ] ; [ "recordId" ; $recordId ; JSONString ] ) ]
+Execute FileMaker Data API [ Select ; Target: $result ; $request ]
+#
+Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDeleteResult" ; Parameters: $result ]
+Exit Script [ Text Result: True ]

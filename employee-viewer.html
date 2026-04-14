@@ -27,6 +27,7 @@
   <table>
     <thead>
       <tr>
+        <th class="no-sort col-num" scope="col">#</th>
         <th data-key="fullName">氏名</th>
         <th data-key="location">事業所略名</th>
         <th data-key="status">在籍</th>
@@ -41,7 +42,8 @@
   <div id="empty">データがありません。</div>
   <div id="deleteModal">
     <div class="modal-box">
-      <p>レコードを削除します。<br>よろしいでしょうか？</p>
+      <div class="modal-drag-handle" title="ドラッグして移動" aria-label="ドラッグして移動"></div>
+      <p>「<span id="deleteModalFullName"></span>」のレコードを削除します。<br>よろしいでしょうか？</p>
       <div class="modal-btns">
         <button type="button" class="btn-yes" id="btnDeleteYes">はい</button>
         <button type="button" class="btn-no" id="btnDeleteNo">いいえ</button>
@@ -50,6 +52,7 @@
   </div>
   <div id="editModal">
     <div class="modal-box modal-box--form">
+      <div class="modal-drag-handle" title="ドラッグして移動" aria-label="ドラッグして移動"></div>
       <h3 class="modal-title">レコードを編集</h3>
       <div class="edit-form">
         <label class="edit-label">氏名</label>
@@ -79,6 +82,11 @@
     </div>
   </div>
 
-  <script src="employee-viewer.js"></script>
+  <script src="employee-viewer-core.js"></script>
+  <script src="employee-viewer-utils-dom.js"></script>
+  <script src="employee-viewer-table.js"></script>
+  <script src="employee-viewer-data.js"></script>
+  <script src="employee-viewer-actions.js"></script>
+  <script src="employee-viewer-init.js"></script>
 </body>
 </html>
