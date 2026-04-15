@@ -7,7 +7,12 @@
   <link rel="stylesheet" href="employee-viewer.css" />
 </head>
 <body>
-  <h2>従業員一覧</h2>
+  <div class="title-bar">
+    <div class="title-bar-main">
+      <h2>従業員一覧</h2>
+      <button type="button" class="btn-security" id="btnSecurityInfo" title="ログイン中のアカウントと権限を表示">権限確認</button>
+    </div>
+  </div>
 
   <div class="topbar">
     <div class="topbar-left">
@@ -78,6 +83,38 @@
       <div class="modal-btns modal-btns--form">
         <button type="button" class="btn-save" id="btnEditSave" title="保存">💾 保存</button>
         <button type="button" class="btn-cancel" id="btnEditCancel" title="キャンセル">✕ キャンセル</button>
+      </div>
+    </div>
+  </div>
+  <div id="securityModal">
+    <div class="modal-box modal-box--security">
+      <div class="modal-drag-handle" title="ドラッグして移動" aria-label="ドラッグして移動"></div>
+      <h3 class="modal-title">権限の確認</h3>
+      <div class="security-modal-body">
+        <div class="security-field">
+          <div class="security-label">アカウント</div>
+          <div class="security-value" id="secAccount">—</div>
+        </div>
+        <div class="security-field">
+          <div class="security-label">権限セット</div>
+          <div class="security-value" id="secPrivilegeSet">—</div>
+        </div>
+        <div class="security-field">
+          <div class="security-label">レイアウトへのアクセス</div>
+          <div class="security-value" id="secLayoutAccess">—</div>
+        </div>
+        <div class="security-field">
+          <div class="security-label">レコードへのアクセス</div>
+          <div class="security-value" id="secRecordAccess">—</div>
+        </div>
+        <div class="security-field security-field--block">
+          <div class="security-label">許可された拡張アクセス（セキュリティの「拡張アクセス」に基づく）</div>
+          <ul class="security-actions-list" id="secActionsList"></ul>
+          <p class="security-hint" id="secActionsEmpty" hidden>拡張アクセスのキーワードはありません（権限セットに拡張アクセスが割り当てられていないか、取得できませんでした）。</p>
+        </div>
+      </div>
+      <div class="modal-btns modal-btns--form">
+        <button type="button" class="btn-close-modal" id="btnSecurityClose" title="閉じる">閉じる</button>
       </div>
     </div>
   </div>

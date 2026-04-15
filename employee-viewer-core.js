@@ -11,7 +11,8 @@
       totalCount: 0,
       locationFilter: '',
       pendingDeleteId: null,
-      editingRow: null
+      editingRow: null,
+      canEditDelete: false
     },
     FIELD_MAP: {
       fullName: '氏名',

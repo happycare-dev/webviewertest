@@ -1,0 +1,20 @@
+# GetSecurityInfo — return current account / privilege / extended access for Web Viewer 「権限確認」
+# Callback: Perform JavaScript in Web Viewer → receiveSecurityInfo (object name: web)
+#
+# Builds one JSON object (passed as script parameter to the JS function).
+# Get(LayoutAccess) requires FileMaker 18 or later; on older versions, remove the layoutAccess JSONSetElement line.
+
+Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
+	[ "accountName" ; Get ( AccountName ) ; JSONString ] ;
+	[ "privilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
+	[ "extendedPrivilegesRaw" ; Get ( AccountExtendedPrivileges ) ; JSONString ]
+) ]
+Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "recordAccess" ; Get ( RecordAccess ) ; JSONNumber ] ) ]
+Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "layoutAccess" ; Get ( LayoutAccess ) ; JSONNumber ] ) ]
+
+# Coerce JSON to text for the Web Viewer bridge (JSONSetElement may be JSON type; Data API $result is usually already text).
+Set Variable [ $jsonText ; Value: GetAsText ( $json ) ]
+
+# Web Viewer object name must match JS (e.g. web).
+Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveSecurityInfo" ; Parameters: $jsonText ]
+Exit Script [ Text Result: True ]

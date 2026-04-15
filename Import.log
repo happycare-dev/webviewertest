@@ -14,3 +14,12 @@
 2026-03-30 14:35:39.526 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
 2026-03-30 14:35:39.529 +0900	DeleteRecord	0	script steps imported : 3
 2026-03-30 14:35:39.529 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-14 16:14:49.396 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-14 16:14:49.398 +0900	GetSecurityInfo	0	script steps imported : 1
+2026-04-14 16:14:49.399 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-14 16:18:18.459 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-14 16:18:18.460 +0900	GetSecurityInfo	0	script steps imported : 2
+2026-04-14 16:18:18.460 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-14 16:47:58.030 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-14 16:47:58.032 +0900	GetUiCapabilities	0	script steps imported : 2
+2026-04-14 16:47:58.033 +0900	WebViewerTest.fmp12	0	Import completed

@@ -59,9 +59,16 @@
 
     EV.initDraggableModal('deleteModal');
     EV.initDraggableModal('editModal');
+    EV.initDraggableModal('securityModal');
+
+    var btnSecurity = document.getElementById('btnSecurityInfo');
+    if (btnSecurity) btnSecurity.addEventListener('click', window.openSecurityInfo);
+    var btnSecurityClose = document.getElementById('btnSecurityClose');
+    if (btnSecurityClose) btnSecurityClose.addEventListener('click', window.closeSecurityModal);
 
     setTimeout(function () {
       if (typeof FileMaker !== 'undefined') {
+        FileMaker.PerformScript('GetUiCapabilities', '');
         FileMaker.PerformScript('GetLocations', '');
       }
       EV.runFileMakerScript(0, EV.DEFAULT_LIMIT);

@@ -1,9 +1,10 @@
-/* Delete / edit modals and PerformScript for Update / Delete. */
+/* Delete / edit modals, security info, PerformScript for Update / Delete. */
 (function (EV) {
   var state = EV.state;
   var DEFAULT_LIMIT = EV.DEFAULT_LIMIT;
 
   window.confirmDelete = function (recordId) {
+    if (!state.canEditDelete) return;
     state.pendingDeleteId = recordId;
     var nameEl = document.getElementById('deleteModalFullName');
     if (nameEl) {
@@ -22,6 +23,7 @@
   };
 
   window.executeDelete = function () {
+    if (!state.canEditDelete) return;
     document.getElementById('deleteModal').style.display = 'none';
     if (!state.pendingDeleteId) return;
     var param = JSON.stringify({ recordId: String(state.pendingDeleteId) });
@@ -32,6 +34,7 @@
   };
 
   EV.openEditModal = function (row, sourceEl) {
+    if (!state.canEditDelete) return;
     state.editingRow = row;
     if (sourceEl) EV.highlightRowForElement(sourceEl);
     document.getElementById('editFullName').value = row.fullName || '';
@@ -48,6 +51,7 @@
   };
 
   EV.saveEditModal = function () {
+    if (!state.canEditDelete) return;
     var row = state.editingRow;
     if (!row) return;
     var apiId = row.apiRecordId;
@@ -80,5 +84,24 @@
     } else {
       console.log('UpdateEmployeeDataAPI', payload);
     }
+  };
+
+  window.openSecurityInfo = function () {
+    if (typeof FileMaker !== 'undefined') {
+      FileMaker.PerformScript('GetSecurityInfo', '');
+      return;
+    }
+    window.receiveSecurityInfo(JSON.stringify({
+      accountName: '（FileMaker 環境外のため取得できません）',
+      privilegeSetName: '',
+      extendedPrivilegesRaw: '',
+      recordAccess: '',
+      layoutAccess: ''
+    }));
+  };
+
+  window.closeSecurityModal = function () {
+    var el = document.getElementById('securityModal');
+    if (el) el.style.display = 'none';
   };
 })(window.EV);

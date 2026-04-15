@@ -40,6 +40,9 @@
 
     countEl.textContent = list.length + ' 件';
 
+    var thAct = document.querySelector('th.col-actions');
+    if (thAct) thAct.style.display = state.canEditDelete ? '' : 'none';
+
     if (list.length === 0) {
       tbody.innerHTML = '';
       emptyEl.style.display = 'block';
@@ -48,6 +51,12 @@
     emptyEl.style.display = 'none';
     tbody.innerHTML = list.map(function (row, index) {
       var rowNum = state.offset + index + 1;
+      var actionsCell = state.canEditDelete
+        ? '<td class="td-actions">' +
+          '<button type="button" class="btn-edit" data-edit-id="' + EV.escAttr(row.apiRecordId) + '" title="編集">✏️</button>' +
+          '<button type="button" class="btn-delete" data-record-id="' + EV.escAttr(row.apiRecordId) + '" title="削除">🗑</button>' +
+          '</td>'
+        : '<td class="td-actions" style="display:none"></td>';
       return '<tr>' +
         '<td class="col-num">' + rowNum + '</td>' +
         '<td>' + EV.esc(row.fullName) + '</td>' +
@@ -55,10 +64,7 @@
         '<td>' + EV.esc(row.status) + '</td>' +
         '<td>' + EV.esc(row.joinDate) + '</td>' +
         '<td>' + EV.esc(row.leaveDate) + '</td>' +
-        '<td class="td-actions">' +
-          '<button type="button" class="btn-edit" data-edit-id="' + EV.escAttr(row.apiRecordId) + '" title="編集">✏️</button>' +
-          '<button type="button" class="btn-delete" data-record-id="' + EV.escAttr(row.apiRecordId) + '" title="削除">🗑</button>' +
-        '</td>' +
+        actionsCell +
       '</tr>';
     }).join('');
   };
