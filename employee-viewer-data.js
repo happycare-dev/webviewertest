@@ -171,11 +171,9 @@
   function recordAccessDescription(code) {
     var n = parseInt(code, 10);
     var map = {
-      0: '未判定、またはデータベースがクライアントで開かれていません',
-      1: 'レコードへのアクセスなし',
-      2: '表示のみ',
-      3: '限定された修正（削除不可など）',
-      4: 'レコードの編集が可能'
+      0: 'レコードへのアクセスなし',
+      1: '表示のみ',
+      2: 'レコードの編集が可能'
     };
     if (map[n] === undefined) return 'コード: ' + String(code);
     return map[n] + '（' + n + '）';
@@ -184,10 +182,9 @@
   function layoutAccessDescription(code) {
     var n = parseInt(code, 10);
     var map = {
-      0: '未判定、またはデータベースがクライアントで開かれていません',
-      1: 'レイアウトへのアクセスなし',
-      2: '表示のみ',
-      3: 'レイアウトおよびレコードの変更が可能'
+      0: 'レイアウト経由のレコードアクセスなし',
+      1: '表示のみ',
+      2: 'レイアウトの変更が可能'
     };
     if (map[n] === undefined) return 'コード: ' + String(code);
     return map[n] + '（' + n + '）';
@@ -241,6 +238,17 @@
     return false;
   }
 
+  function hasAccessCode(v) {
+    return v !== undefined && v !== null && v !== '';
+  }
+
+  function canEditDeleteFromPayload(payload) {
+    if (hasAccessCode(payload.recordAccess) && hasAccessCode(payload.layoutAccess)) {
+      return parseInt(payload.recordAccess, 10) === 2 && parseInt(payload.layoutAccess, 10) === 2;
+    }
+    return coerceBoolean(payload.canEditDelete);
+  }
+
   window.receiveUiCapabilities = function () {
     var rawIn = firstSecurityArgument(arguments);
     var parsed;
@@ -251,7 +259,7 @@
       return;
     }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
-    state.canEditDelete = coerceBoolean(parsed.canEditDelete);
+    state.canEditDelete = canEditDeleteFromPayload(parsed);
     if (typeof EV.render === 'function') EV.render();
   };
 
