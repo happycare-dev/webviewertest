@@ -24,6 +24,9 @@ function makeElement(id) {
     },
     getAttribute(name) {
       return this[name];
+    },
+    querySelector() {
+      return null;
     }
   };
 }
@@ -70,6 +73,9 @@ function loadViewer() {
   const context = {
     console,
     document,
+    requestAnimationFrame(callback) {
+      callback();
+    },
     alert() {},
     window: {}
   };
