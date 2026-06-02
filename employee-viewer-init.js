@@ -26,6 +26,13 @@
     var tbody = document.getElementById('tbody');
     if (tbody) {
       tbody.addEventListener('click', function (e) {
+        var vw = e.target.closest('.btn-view');
+        if (vw) {
+          var vid = vw.getAttribute('data-view-id');
+          var vrow = vid != null && vid !== '' ? EV.findRowByRecordId(vid) : null;
+          if (vrow) EV.openViewModal(vrow, vw);
+          return;
+        }
         var del = e.target.closest('.btn-delete');
         if (del) {
           var id = del.getAttribute('data-record-id');
@@ -59,7 +66,11 @@
 
     EV.initDraggableModal('deleteModal');
     EV.initDraggableModal('editModal');
+    EV.initDraggableModal('viewModal');
     EV.initDraggableModal('securityModal');
+
+    var btnViewClose = document.getElementById('btnViewClose');
+    if (btnViewClose) btnViewClose.addEventListener('click', EV.closeViewModal);
 
     var btnSecurity = document.getElementById('btnSecurityInfo');
     if (btnSecurity) btnSecurity.addEventListener('click', window.openSecurityInfo);

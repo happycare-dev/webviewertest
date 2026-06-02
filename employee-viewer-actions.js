@@ -33,6 +33,27 @@
     }
   };
 
+  EV.openViewModal = function (row, sourceEl) {
+    if (!row) return;
+    if (sourceEl) EV.highlightRowForElement(sourceEl);
+    function setViewText(id, v) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = v != null && String(v) !== '' ? String(v) : '\u2014';
+    }
+    setViewText('viewFullName', row.fullName);
+    setViewText('viewLocation', row.location);
+    setViewText('viewStatus', row.status);
+    setViewText('viewJoinDate', row.joinDate);
+    setViewText('viewLeaveDate', row.leaveDate);
+    EV.showModalOverlay(document.getElementById('viewModal'));
+  };
+
+  EV.closeViewModal = function () {
+    var el = document.getElementById('viewModal');
+    if (el) el.style.display = 'none';
+    EV.clearRowHighlight();
+  };
+
   EV.openEditModal = function (row, sourceEl) {
     if (!state.canEditDelete) return;
     state.editingRow = row;

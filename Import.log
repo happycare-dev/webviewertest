@@ -23,3 +23,36 @@
 2026-04-14 16:47:58.030 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
 2026-04-14 16:47:58.032 +0900	GetUiCapabilities	0	script steps imported : 2
 2026-04-14 16:47:58.033 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-27 13:18:09.331 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-27 13:18:09.332 +0900	LoginValidate	0	script steps imported : 1
+2026-04-27 13:18:09.332 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-27 13:18:27.760 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-27 13:18:27.761 +0900	LoginValidate	0	script steps imported : 1
+2026-04-27 13:18:27.761 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-27 13:19:59.589 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-27 13:19:59.591 +0900	LoginValidate	0	script steps imported : 1
+2026-04-27 13:19:59.592 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-27 13:20:55.930 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-27 13:20:55.931 +0900	LoginValidate	0	script steps imported : 1
+2026-04-27 13:20:55.931 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-27 13:42:30.159 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-27 13:42:30.160 +0900	LoginValidate	0	script steps imported : 2
+2026-04-27 13:42:30.160 +0900	WebViewerTest.fmp12	0	Import completed
+2026-04-27 15:00:36.917 +0900	WebViewerTest.fmp12	0	Import of script steps from clipboard started
+2026-04-27 15:00:36.927 +0900	Account::5::Set Variable	1208	Function referred to in the calculation “Let (query = "SELECT " &kt_SQLFieldName ( EmployeeM::アカウント ) & ", " &kt_SQLFieldName ( EmployeeM::パスワード ) & ", " &kt_SQLFieldName ( EmployeeM::アクセス権セット ) & ", " &kt_SQLFieldName ( EmployeeM::在籍フラグ ) & " " &"FROM " &kt_QuoteTOName ( EmployeeM::ID ) & " " &"WHERE " &kt_SQLFieldName ( EmployeeM::アカウント ) & " IS NOT NULL" ;ExecuteSQL ( query ; "|" ; "¶" ))” is missing.
+2026-04-27 15:00:36.928 +0900	Account::22::Perform Script	114	File reference “HC_Data” missing.
+2026-04-27 15:00:36.929 +0900	Account::22::Perform Script	0	Missing file reference “HC_Data” created and imported automatically.
+2026-04-27 15:00:36.930 +0900	Account::23::Perform Script	114	File reference “HC_Master” missing.
+2026-04-27 15:00:36.931 +0900	Account::23::Perform Script	0	Missing file reference “HC_Master” created and imported automatically.
+2026-04-27 15:00:36.931 +0900	Account::24::Perform Script	114	File reference “CareAssist” missing.
+2026-04-27 15:00:36.931 +0900	Account::24::Perform Script	0	Missing file reference “CareAssist” created and imported automatically.
+2026-04-27 15:00:36.931 +0900	Account::25::Perform Script	114	File reference “HC_Storage” missing.
+2026-04-27 15:00:36.932 +0900	Account::25::Perform Script	0	Missing file reference “HC_Storage” created and imported automatically.
+2026-04-27 15:00:36.932 +0900	Account::26::Perform Script	114	File reference “Log” missing.
+2026-04-27 15:00:36.932 +0900	Account::26::Perform Script	0	Missing file reference “Log” created and imported automatically.
+2026-04-27 15:00:36.932 +0900	Account::27::Perform Script	114	File reference “InformationBoard” missing.
+2026-04-27 15:00:36.933 +0900	Account::27::Perform Script	0	Missing file reference “InformationBoard” created and imported automatically.
+2026-04-27 15:00:36.933 +0900	Account::28::Perform Script	114	File reference “CareAssistant” missing.
+2026-04-27 15:00:36.933 +0900	Account::28::Perform Script	0	Missing file reference “CareAssistant” created and imported automatically.
+2026-04-27 15:00:36.935 +0900	Account	0	script steps imported : 64
+2026-04-27 15:00:36.935 +0900	WebViewerTest.fmp12	0	Import completed

@@ -5,28 +5,33 @@ Use this file when starting a **new chat** so the assistant understands this rep
 ## What this repo is
 
 - **Purpose:** FileMaker **Web Viewer**–hosted employee list for file **WebViewerTest** (layout **EmployeeM**).
-- **Stack:** Static `employee-viewer.html` + `employee-viewer.css` + several **`.js`** modules. No bundler; FileMaker loads the HTML from disk or a URL you configure.
+- **Stack:** Static `employee-viewer.html` + `employee-viewer.css` + six **`.js`** modules. No bundler; FileMaker loads the HTML from disk or a URL you configure.
 - **Data access:** FileMaker scripts call **Execute FileMaker Data API** (read/update/delete) and return JSON to the Web Viewer via **Perform JavaScript in Web Viewer** (object name **`web`**).
 
 ## Web Viewer object (FileMaker)
 
 - **Web Viewer object name:** `web` (required for all `Perform JavaScript in Web Viewer` script steps in the reference scripts).
-- **URL:** Points at `employee-viewer.html` (and the same folder must contain all assets below).
+- **URL:** Points at `employee-viewer.html` (same folder must contain **all** linked `.js` and `.css` files).
 
 ## Front-end file layout & load order
 
-Scripts **must** load in this order (defined in `employee-viewer.html`):
+Scripts **must** load in this order (`employee-viewer.html`):
 
 | Order | File | Role |
 |------:|------|------|
-| 1 | `employee-viewer-core.js` | Defines `window.EV`: `state`, `DEFAULT_LIMIT`, `FIELD_MAP` |
+| 1 | `employee-viewer-core.js` | `window.EV`: `state`, `DEFAULT_LIMIT`, `FIELD_MAP` |
 | 2 | `employee-viewer-utils-dom.js` | Escaping, dates, row highlight, modal center/show, drag |
 | 3 | `employee-viewer-table.js` | `EV.render`, `EV.findRowByRecordId`, `EV.applyFilter`, `EV.applySort` |
-| 4 | `employee-viewer-data.js` | `EV.runFileMakerScript`, FileMaker-facing `window.*` callbacks |
-| 5 | `employee-viewer-actions.js` | Delete/edit modals, `PerformScript` for update/delete |
-| 6 | `employee-viewer-init.js` | `DOMContentLoaded` wiring, `initDraggableModal`, initial load |
+| 4 | `employee-viewer-data.js` | `EV.runFileMakerScript`, FileMaker `window.*` callbacks (data, delete/update results, UI caps, security) |
+| 5 | `employee-viewer-actions.js` | Modals (delete / edit / **view** / **security**), `PerformScript` for update/delete/security |
+| 6 | `employee-viewer-init.js` | `DOMContentLoaded`, table clicks, drags, initial `PerformScript` chain |
 
 **Namespace:** Internal helpers live on **`window.EV`**. Do not rename `EV` without updating every module.
+
+## Shared state (`employee-viewer-core.js`)
+
+- **`EV.state`:** `rows`, `filtered`, `sortKey`, `sortDir`, `offset`, `totalCount`, `locationFilter`, `pendingDeleteId`, `editingRow`, **`canEditDelete`** (boolean; driven by FileMaker **GetUiCapabilities**).
+- **`EV.DEFAULT_LIMIT`:** Page size (e.g. `50`) — must stay aligned with **GetData** `limit` in the JSON payload.
 
 ## FileMaker scripts ↔ JavaScript (contract)
 
@@ -34,66 +39,83 @@ Scripts **must** load in this order (defined in `employee-viewer.html`):
 |------------------|-----------------|----------------------|
 | **GetData** | `FileMaker.PerformScript('GetData', param)` | `window.receiveDataFromFileMaker(result)` |
 | **GetLocations** | `FileMaker.PerformScript('GetLocations', '')` | `window.receiveLocations(result)` |
+| **GetUiCapabilities** | `FileMaker.PerformScript('GetUiCapabilities', '')` | `window.receiveUiCapabilities(…)` — sets **`state.canEditDelete`** from JSON `{ "canEditDelete": true/false }` |
+| **GetSecurityInfo** | `window.openSecurityInfo()` → `PerformScript('GetSecurityInfo', '')` | `window.receiveSecurityInfo(…)` — fills **権限確認** modal |
 | **UpdateEmployeeDataAPI** | `FileMaker.PerformScript('UpdateEmployeeDataAPI', JSON.stringify(payload))` | `window.receiveUpdateResult(result)` |
 | **DeleteRecord** | `FileMaker.PerformScript('DeleteRecord', JSON.stringify({ recordId }))` | `window.receiveDeleteResult(result)` |
 
-Also on **`window`** (used by HTML / FM): `filterByLocation`, `changePage`, `confirmDelete`, `cancelDelete`, `executeDelete`.
+**Also on `window`:** `filterByLocation`, `changePage`, `confirmDelete`, `cancelDelete`, `executeDelete`, **`openSecurityInfo`**, **`closeSecurityModal`**.
 
-**Reference copies** of FileMaker script text (for copy-paste into FileMaker) live under **` FileMakerScripts/`** (note: folder name may include a leading space on disk—verify in Finder/`ls`).
+**On `EV` (used from init / table):** `openViewModal`, `closeViewModal`, `openEditModal`, `closeEditModal`, `saveEditModal`, etc.
 
-## GetData JSON parameter (from `employee-viewer-data.js`)
+**Startup order** (`employee-viewer-init.js`, ~100 ms after load): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). Capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons.
 
-Sent as one JSON string to **GetData**:
+**Reference copies** of FileMaker script text live under **` FileMakerScripts/`** (folder name on disk may include a **leading space** — verify with `ls` / Finder). Files include: `GetData.txt`, `GetLocations.txt`, `DeleteRecord.txt`, `UpdateEmployeeDataAPI.txt`, **`GetUiCapabilities.txt`**, **`GetSecurityInfo.txt`**.
+
+### GetUiCapabilities (FileMaker)
+
+- Builds JSON with **`canEditDelete`** (JSONBoolean) from **`Get(AccountPrivilegeSetName)`** and a **`Case`** list of allowed privilege set names (e.g. `[Full Access]`, `Admin`, `Manager` — **must match File → Manage Security exactly**).
+- Performs **`receiveUiCapabilities`** with **`GetAsText($json)`** (or equivalent text) so the Web Viewer receives parseable JSON.
+
+### GetSecurityInfo (FileMaker)
+
+- Builds one JSON object: `accountName`, `privilegeSetName`, `extendedPrivilegesRaw`, `recordAccess`, **`layoutAccess`** (requires **FileMaker 18+** for `Get(LayoutAccess)`; remove that key on older versions if needed).
+- Passes **text** into **`receiveSecurityInfo`** (e.g. **`GetAsText($json)`**) — empty parameter breaks the modal; JS shows a Japanese alert if parse fails or body is empty.
+
+## GetData JSON parameter (`employee-viewer-data.js`)
 
 - `offset` — 0-based in JS; **GetData** adds **1** for FileMaker Data API `offset` (see `GetData.txt`).
-- `limit` — page size; must match **`EV.DEFAULT_LIMIT`** in `employee-viewer-core.js` (e.g. 50).
-- `sortField` — Japanese field name from `FIELD_MAP` (e.g. `氏名`, `事業所略称`, `在籍フラグ`, `入社　年月日`, `退職　年月日` with **U+3000** between 入社/年月日 and 退職/年月日 where applicable).
+- `limit` — page size; align with **`EV.DEFAULT_LIMIT`**.
+- `sortField` — Japanese field name from **`FIELD_MAP`** (`氏名`, `事業所略称`, `在籍フラグ`, `入社　年月日`, `退職　年月日` with **U+3000** in the date keys where applicable).
 - `sortOrder` — `ascend` | `descend`.
-- `locationFilter` — value for query on **`事業所略称`**; empty string = all locations.
+- `locationFilter` — query on **`事業所略称`**; empty = all.
 
-**Layout** for Data API requests in scripts: **`EmployeeM`**.
+**Layout** for Data API in scripts: **`EmployeeM`**.
 
-## Record identity rules (important)
+## Record identity & update payload
 
-- **Delete** and **Update** use FileMaker Data API **`recordId`** (internal id from read responses), **not** a business key from `fieldData` unless you deliberately change both sides.
-- In row data, **`apiRecordId`** is the string used for edit/delete buttons and payloads.
-- **`modId`:** Only send in update payload if numeric **`>= 1`**. Omit when `"0"` or empty — otherwise Data API can return **1708** (“integer 1 …”).
-- Update **`fieldData`** keys must match the **EmployeeM** layout / Data API (e.g. `入社　年月日` / `退職　年月日` use **ideographic space U+3000** in keys, consistent with FM script and JS `\u3000`).
+- **Delete** / **Update** use Data API internal **`recordId`** (from read responses). Row field **`apiRecordId`** is used for buttons and payloads.
+- **`modId`:** Include in update payload only if numeric **`>= 1`**. Omit for `"0"` / empty — avoids **1708** (“integer 1 …”).
+- **`fieldData`** keys must match **EmployeeM** / Data API (ideographic space **U+3000** in `入社　年月日` / `退職　年月日`).
 
-## 在籍フラグ (status flag)
+## 在籍フラグ
 
-- Field is a **calculation** (e.g. from 在籍区分); **do not** send it in **UpdateEmployeeDataAPI** `fieldData` (removed from JS payload and from `$fd` in `UpdateEmployeeDataAPI.txt`).
-- List still **displays** 在籍 / 退職 from read data; **editing** that value via UI is commented out until a stored field (e.g. 在籍区分) is wired.
+- **Calculation** field — **not** sent in **UpdateEmployeeDataAPI** `fieldData` (stripped in JS and in `$fd` in `UpdateEmployeeDataAPI.txt`). List still **shows** 在籍/退職; edit UI for status remains commented in HTML until a stored field (e.g. 在籍区分) is wired.
 
 ## FileMaker script implementation notes
 
-- **UpdateEmployeeDataAPI:** Build `$fd` with **per-field** `JSONGetElement($param ; "fieldData.…")` lines; avoid assigning the whole nested `fieldData` object into `JSONObject` in one step (can cause **1708** parse issues).
-- **UpdateEmployeeDataAPI:** Includes **`options`** with `entrymode` / `prohibitmode` **`script`** to reduce **201 Field cannot be modified** when fields have prohibit-modification options.
-- **DeleteRecord:** Current design uses Data API **`action: delete`**; older layout/find/delete steps are kept as **comments** in `DeleteRecord.txt` only.
+- **UpdateEmployeeDataAPI:** Build `$fd` with **per-field** `JSONGetElement($param ; "fieldData.…")`; avoid stuffing whole nested `fieldData` into **`JSONObject`** in one step (can cause **1708**).
+- **UpdateEmployeeDataAPI:** Uses **`options`** `entrymode` / `prohibitmode` **`script`** to mitigate **201 Field cannot be modified**.
+- **DeleteRecord:** Uses Data API **`action: delete`**. Legacy layout/find/delete steps are **comment-only** in `DeleteRecord.txt`.
 
-## UI / UX rules implemented
+## HTML / UI overview
 
-- **Row highlight** when opening delete confirm or edit modal; cleared on cancel, close edit, delete error, or whenever **`EV.runFileMakerScript`** runs (refresh/sort/filter/page).
-- **Delete modal** shows **「氏名」** (full name) in the message; drag handle on modals; modals repositioned with **`showModalOverlay`** (centered on each open).
-- **# column** before 氏名: `state.offset + rowIndex + 1` (global order in found set).
-- **Edit** uses modal; **Save** calls **UpdateEmployeeDataAPI**; dates converted display **YYYY/MM/DD** ↔ FileMaker **M/D/YYYY** in JS.
+- **Title bar:** heading **従業員一覧** + **権限確認** (`#btnSecurityInfo`) → **`GetSecurityInfo`** → **`receiveSecurityInfo`** → **`#securityModal`** (account, privilege set, layout/record access text, extended privileges list with Japanese labels in JS).
+- **Table:** `#` column, 氏名 … 事業所略名, 在籍, dates, **actions** column.
+- **Actions column:** **View** (eye) always — **`EV.openViewModal`** (`#viewModal`, read-only). **Edit** / **Delete** render **only if** **`state.canEditDelete`**; otherwise only the view button.
+- **Guards:** `confirmDelete`, `executeDelete`, `openEditModal`, `saveEditModal` **return early** if **`!state.canEditDelete`** (defense in depth).
+- **Modals:** **deleteModal**, **editModal**, **viewModal**, **securityModal** — each has **`.modal-drag-handle`**; **`EV.initDraggableModal`** is called for all four in **`employee-viewer-init.js`**.
+- **Delete modal:** Shows **「氏名」** via **`#deleteModalFullName`**.
+- **Row highlight** on view / delete / edit from actions; cleared on cancel/close, delete error, **`EV.runFileMakerScript`**, etc. (see **`EV.clearRowHighlight`** usage in data/actions).
 
 ## Pagination
 
-- Change page size by editing **`EV.DEFAULT_LIMIT`** in **`employee-viewer-core.js`** only (unless FileMaker caps `limit`).
+- Change page size in **`EV.DEFAULT_LIMIT`** in **`employee-viewer-core.js`** (unless FileMaker caps `limit`).
 
-## Docs in repo
+## Other repo files
 
-- **`FILEMAKER-SETUP.md`** / **`FILEMAKER-SETUP-English.md`** — older notes (e.g. Base64 URL data); current list uses **GetData** + JSON, not necessarily those URL patterns.
-- **`README.md`** — short repo label.
+- **`WebViewerTest.fmp12`** — FileMaker solution (not parsed in git as text).
+- **`FILEMAKER-SETUP.md`** / **`FILEMAKER-SETUP-English.md`** — older Web Viewer / Base64 URL notes; live list uses **GetData** + JSON from scripts.
+- **`README.md`** — short label.
 
 ## Conventions for code changes
 
-- Prefer **small, focused edits**; match existing style (IIFEs, `var`, `EV.*` naming).
-- Keep **all script tags** in HTML in the **order** above if you add new modules.
-- Any new **Perform JavaScript** target must use function names on **`window`** if FileMaker calls them by string name.
-- After changing FM script text in **`.txt`** files, **re-apply** steps inside the actual **.fmp12** file in FileMaker Pro.
+- Prefer **small, focused edits**; match existing style (IIFEs, `var`, **`EV.*`**).
+- Keep **script tag order** in HTML if you add modules.
+- New **Perform JavaScript** targets must match **`window.*`** or **`EV.*`** names FileMaker calls.
+- After editing **`.txt`** scripts in **` FileMakerScripts/`**, re-apply steps in the real **`.fmp12`** in FileMaker Pro.
+- When adding privilege sets to **GetUiCapabilities**, match **Manage Security** spelling exactly.
 
 ---
 
-*Last aligned with repo layout: employee-viewer split modules + FileMakerScripts GetData / GetLocations / DeleteRecord / UpdateEmployeeDataAPI.*
+*Last updated to match: split JS modules, `canEditDelete` / GetUiCapabilities, view & security modals, GetSecurityInfo, table actions (view always, edit/delete conditional).*

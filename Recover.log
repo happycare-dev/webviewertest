@@ -1,0 +1,5 @@
+﻿Timestamp	Filename	Error	Message
+2026-05-25 12:02:34.523 +0900	WebViewerTest.fmp12	0	*** Started consistency check of improperly closed file, total of 201596 block(s) to check
+2026-05-25 12:02:35.390 +0900	WebViewerTest.fmp12	8432	Page 201596 marked free but not in free list
+2026-05-25 12:02:35.391 +0900	WebViewerTest.fmp12	0	Reset maximum block sequence number to 4409562
+2026-05-25 12:02:35.392 +0900	WebViewerTest.fmp12	0	*** Completed consistency check, checked 201596 block(s)

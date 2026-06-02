@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ログイン</title>
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <div class="login-shell">
+    <div class="login-card">
+      <h1 class="login-title">ログイン</h1>
+      <p class="login-hint">従業員マスタのアカウントでサインインしてください。</p>
+      <div id="loginFeedback" class="login-feedback" role="status" aria-live="polite" hidden></div>
+      <form id="loginForm" novalidate>
+        <label class="login-label" for="account">アカウント</label>
+        <input type="text" id="account" name="account" autocomplete="username" class="login-input" />
+
+        <label class="login-label" for="password">パスワード</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" class="login-input" />
+
+        <button type="submit" class="login-submit" id="btnSubmit">ログイン</button>
+      </form>
+    </div>
+  </div>
+  <script src="login.js"></script>
+</body>
+</html>
