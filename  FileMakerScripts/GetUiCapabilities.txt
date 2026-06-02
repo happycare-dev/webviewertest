@@ -1,15 +1,26 @@
 # GetUiCapabilities — tells Web Viewer whether to show Edit/Delete (Perform JS → receiveUiCapabilities, object web)
 #
-# Allowed privilege set names must match File → Manage Security exactly (add/remove Case lines as needed).
+# Edit/delete is allowed when the current user can edit records through this layout.
+# Privilege-set names are kept as an explicit override for deployments that use
+# those sets as the policy source.
 
 Set Variable [ $priv ; Value: Get ( AccountPrivilegeSetName ) ]
+Set Variable [ $recordAccess ; Value: Get ( RecordAccess ) ]
+Set Variable [ $layoutAccess ; Value: Get ( LayoutAccess ) ]
+Set Variable [ $allowByAccess ; Value: GetAsNumber ( $recordAccess ) = 2 and GetAsNumber ( $layoutAccess ) = 2 ]
 Set Variable [ $allow ; Value: Case (
+	$allowByAccess ; True ;
 	$priv = "[Full Access]" ; True ;
 	$priv = "Admin" ; True ;
 	$priv = "Manager" ; True ;
 	False
 ) ]
-Set Variable [ $json ; Value: JSONSetElement ( "{}" ; [ "canEditDelete" ; $allow ; JSONBoolean ] ) ]
+Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
+	[ "canEditDelete" ; $allow ; JSONBoolean ] ;
+	[ "privilegeSetName" ; $priv ; JSONString ] ;
+	[ "recordAccess" ; $recordAccess ; JSONNumber ] ;
+	[ "layoutAccess" ; $layoutAccess ; JSONNumber ]
+) ]
 Set Variable [ $jsonText ; Value: GetAsText ( $json ) ]
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUiCapabilities" ; Parameters: $jsonText ]
 Exit Script [ Text Result: True ]
