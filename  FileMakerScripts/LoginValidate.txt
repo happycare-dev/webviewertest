@@ -2,7 +2,7 @@
 #
 # Web Viewer（オブジェクト名 web）からのパラメータ JSON:
 #   { "account": "...", "password": "..." }
-# 検証: EmployeeM の「アカウント」一致、在籍フラグ=1、パスワード一致 → のみレイアウト「WebViewerTest」へ移動。
+# 検証: EmployeeM の「アカウント」一致、在籍フラグ=1、パスワード一致、FileMaker Re-Login 成功 → のみレイアウト「WebViewerTest」へ移動。
 # 失敗時は receiveLoginResult に JSON（GetAsText 推奨）。レイアウト移動は $loginSuccess = 1 のときのみ 1 か所で実行。
 #
 # 前提:
@@ -13,44 +13,64 @@
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $account ; Value: JSONGetElement ( $param ; "account" ) ]
 Set Variable [ $password ; Value: JSONGetElement ( $param ; "password" ) ]
+Set Variable [ $$WebViewerEmployeeLoggedIn ; Value: 0 ]
+Set Variable [ $$WebViewerEmployeeAccount ; Value: "" ]
+Set Variable [ $$WebViewerEmployeePrivilegeSet ; Value: "" ]
 
 # 0 = 失敗（レイアウト移動しない）、1 = すべて合格
 Set Variable [ $loginSuccess ; Value: 0 ]
 Set Variable [ $errorCode ; Value: "" ]
 Set Variable [ $apiMsg ; Value: "" ]
 
-# 従業員マスタをアカウントで検索（先頭1件）
-Set Variable [ $request ; Value: JSONSetElement ( "" ; [ "layouts" ; "EmployeeM" ; JSONString ] ; [ "limit" ; 1 ; JSONNumber ] ; [ "offset" ; 1 ; JSONNumber ] ; [ "query[0].アカウント" ; $account ; JSONString ] ) ]
-Execute FileMaker Data API [ Select ; Target: $result ; $request ]
+If [ IsEmpty ( $account ) or IsEmpty ( $password ) ]
+	Set Variable [ $errorCode ; Value: Case ( IsEmpty ( $account ) ; "no_account" ; "wrong_password" ) ]
+End If
 
-# --- Data API 応答 ---
-# 検索で 0 件のとき、環境によっては code=0 + foundCount=0 ではなく、
-# code=401 や message「No records match…」だけが返ることがある。その場合も no_account と同じ扱いにする。
-Set Variable [ $apiCode ; Value: JSONGetElement ( $result ; "messages[0].code" ) ]
-If [ not IsEmpty ( $apiCode ) and $apiCode ≠ "0" ]
-	Set Variable [ $apiMsg ; Value: JSONGetElement ( $result ; "messages[0].message" ) ]
-	If [ GetAsNumber ( $apiCode ) = 401 or PatternCount ( Lower ( $apiMsg ) ; "no records match" ) > 0 ]
-		Set Variable [ $errorCode ; Value: "no_account" ]
-	Else
-		Set Variable [ $errorCode ; Value: "api_error" ]
-	End If
-Else
-	# --- 件数（アカウント存在）---
-	Set Variable [ $foundCount ; Value: JSONGetElement ( $result ; "response.dataInfo.foundCount" ) ]
-	If [ IsEmpty ( $foundCount ) or GetAsNumber ( $foundCount ) < 1 ]
-		Set Variable [ $errorCode ; Value: "no_account" ]
-	Else
-		Set Variable [ $flag ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.在籍フラグ" ) ]
-		Set Variable [ $storedPw ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.パスワード" ) ]
-		# --- 在籍のみ ---
-		If [ GetAsNumber ( $flag ) ≠ 1 ]
-			Set Variable [ $errorCode ; Value: "not_active" ]
+# 従業員マスタをアカウントで検索（先頭1件）
+If [ IsEmpty ( $errorCode ) ]
+	Set Variable [ $request ; Value: JSONSetElement ( "" ; [ "layouts" ; "EmployeeM" ; JSONString ] ; [ "limit" ; 1 ; JSONNumber ] ; [ "offset" ; 1 ; JSONNumber ] ; [ "query[0].アカウント" ; $account ; JSONString ] ) ]
+	Execute FileMaker Data API [ Select ; Target: $result ; $request ]
+
+	# --- Data API 応答 ---
+	# 検索で 0 件のとき、環境によっては code=0 + foundCount=0 ではなく、
+	# code=401 や message「No records match…」だけが返ることがある。その場合も no_account と同じ扱いにする。
+	Set Variable [ $apiCode ; Value: JSONGetElement ( $result ; "messages[0].code" ) ]
+	If [ not IsEmpty ( $apiCode ) and $apiCode ≠ "0" ]
+		Set Variable [ $apiMsg ; Value: JSONGetElement ( $result ; "messages[0].message" ) ]
+		If [ GetAsNumber ( $apiCode ) = 401 or PatternCount ( Lower ( $apiMsg ) ; "no records match" ) > 0 ]
+			Set Variable [ $errorCode ; Value: "no_account" ]
 		Else
-			# --- パスワード（大文字小文字・内容を Exact で一致）---
-			If [ not Exact ( $storedPw ; $password ) ]
-				Set Variable [ $errorCode ; Value: "wrong_password" ]
+			Set Variable [ $errorCode ; Value: "api_error" ]
+		End If
+	Else
+		# --- 件数（アカウント存在）---
+		Set Variable [ $foundCount ; Value: JSONGetElement ( $result ; "response.dataInfo.foundCount" ) ]
+		If [ IsEmpty ( $foundCount ) or GetAsNumber ( $foundCount ) < 1 ]
+			Set Variable [ $errorCode ; Value: "no_account" ]
+		Else
+			Set Variable [ $flag ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.在籍フラグ" ) ]
+			Set Variable [ $storedPw ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.パスワード" ) ]
+			Set Variable [ $employeePrivilegeSet ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.アクセス権セット" ) ]
+			# --- 在籍のみ ---
+			If [ GetAsNumber ( $flag ) ≠ 1 ]
+				Set Variable [ $errorCode ; Value: "not_active" ]
 			Else
-				Set Variable [ $loginSuccess ; Value: 1 ]
+				# --- パスワード（大文字小文字・内容を Exact で一致）---
+				If [ not Exact ( $storedPw ; $password ) ]
+					Set Variable [ $errorCode ; Value: "wrong_password" ]
+				Else
+					Set Error Capture [ On ]
+					Re-Login [ Account Name: $account ; Password: $password ; With dialog: Off ]
+					If [ Get ( LastError ) ≠ 0 ]
+						Set Variable [ $errorCode ; Value: "wrong_password" ]
+					Else
+						Set Variable [ $loginSuccess ; Value: 1 ]
+						Set Variable [ $$WebViewerEmployeeLoggedIn ; Value: 1 ]
+						Set Variable [ $$WebViewerEmployeeAccount ; Value: $account ]
+						Set Variable [ $$WebViewerEmployeePrivilegeSet ; Value: $employeePrivilegeSet ]
+					End If
+					Set Error Capture [ Off ]
+				End If
 			End If
 		End If
 	End If

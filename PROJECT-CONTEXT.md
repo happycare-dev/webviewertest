@@ -48,14 +48,20 @@ Scripts **must** load in this order (`employee-viewer.html`):
 
 **On `EV` (used from init / table):** `openViewModal`, `closeViewModal`, `openEditModal`, `closeEditModal`, `saveEditModal`, etc.
 
-**Startup order** (`employee-viewer-init.js`, ~100 ms after load): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). Capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons.
+**Startup order** (`employee-viewer-init.js`, ~100 ms after load): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). These scripts fail closed unless **`LoginValidate`** has set `$$WebViewerEmployeeLoggedIn = 1`; capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons.
 
 **Reference copies** of FileMaker script text live under **` FileMakerScripts/`** (folder name on disk may include a **leading space** — verify with `ls` / Finder). Files include: `GetData.txt`, `GetLocations.txt`, `DeleteRecord.txt`, `UpdateEmployeeDataAPI.txt`, **`GetUiCapabilities.txt`**, **`GetSecurityInfo.txt`**.
 
 ### GetUiCapabilities (FileMaker)
 
-- Builds JSON with **`canEditDelete`** (JSONBoolean) from **`Get(AccountPrivilegeSetName)`** and a **`Case`** list of allowed privilege set names (e.g. `[Full Access]`, `Admin`, `Manager` — **must match File → Manage Security exactly**).
+- Requires `$$WebViewerEmployeeLoggedIn = 1`; unauthenticated calls return **`canEditDelete: false`** with `error: "login_required"`.
+- Builds JSON with **`canEditDelete`** (JSONBoolean) from **`Get(RecordAccess)`** and **`Get(LayoutAccess)`** after `LoginValidate` has successfully **Re-Login**'d as the employee account. Current FileMaker access codes are `0` = no access, `1` = view-only, `2` = editable/modifiable.
 - Performs **`receiveUiCapabilities`** with **`GetAsText($json)`** (or equivalent text) so the Web Viewer receives parseable JSON.
+
+### LoginValidate and protected scripts (FileMaker)
+
+- **LoginValidate** validates the EmployeeM account/password row, rejects blank passwords, then performs **Re-Login** using the same account/password. Only after Re-Login succeeds does it set `$$WebViewerEmployeeLoggedIn`, `$$WebViewerEmployeeAccount`, and `$$WebViewerEmployeePrivilegeSet`, then navigate to `WebViewerTest`.
+- **GetData**, **GetLocations**, **GetSecurityInfo**, **UpdateEmployeeDataAPI**, and **DeleteRecord** must check `$$WebViewerEmployeeLoggedIn = 1` before returning employee data, privilege details, or mutating EmployeeM data. Unauthenticated calls return `login_required` and exit without executing the Data API request.
 
 ### GetSecurityInfo (FileMaker)
 
@@ -114,7 +120,7 @@ Scripts **must** load in this order (`employee-viewer.html`):
 - Keep **script tag order** in HTML if you add modules.
 - New **Perform JavaScript** targets must match **`window.*`** or **`EV.*`** names FileMaker calls.
 - After editing **`.txt`** scripts in **` FileMakerScripts/`**, re-apply steps in the real **`.fmp12`** in FileMaker Pro.
-- When adding privilege sets to **GetUiCapabilities**, match **Manage Security** spelling exactly.
+- Do not reintroduce privilege-set-name whitelists in **GetUiCapabilities**; use FileMaker access-code functions after Re-Login.
 
 ---
 

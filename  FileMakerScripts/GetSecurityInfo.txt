@@ -4,6 +4,13 @@
 # Builds one JSON object (passed as script parameter to the JS function).
 # Get(LayoutAccess) requires FileMaker 18 or later; on older versions, remove the layoutAccess JSONSetElement line.
 
+If [ not $$WebViewerEmployeeLoggedIn = 1 ]
+	Set Variable [ $json ; Value: JSONSetElement ( "{}" ; [ "error" ; "login_required" ; JSONString ] ; [ "accountName" ; "" ; JSONString ] ; [ "privilegeSetName" ; "" ; JSONString ] ; [ "extendedPrivilegesRaw" ; "" ; JSONString ] ; [ "recordAccess" ; "" ; JSONString ] ; [ "layoutAccess" ; "" ; JSONString ] ) ]
+	Set Variable [ $jsonText ; Value: GetAsText ( $json ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveSecurityInfo" ; Parameters: $jsonText ]
+	Exit Script [ Text Result: False ]
+End If
+
 Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
 	[ "accountName" ; Get ( AccountName ) ; JSONString ] ;
 	[ "privilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
