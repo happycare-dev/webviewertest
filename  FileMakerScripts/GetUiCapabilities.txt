@@ -1,15 +1,17 @@
 # GetUiCapabilities — tells Web Viewer whether to show Edit/Delete (Perform JS → receiveUiCapabilities, object web)
 #
-# Allowed privilege set names must match File → Manage Security exactly (add/remove Case lines as needed).
+# Derive capability from the current effective FileMaker access instead of privilege-set names.
+# Get(RecordAccess): 0 = no view/edit, 1 = view only, 2 = edit.
+# Get(LayoutAccess): 0 = no records via layout, 1 = view only, 2 = modifiable.
 
-Set Variable [ $priv ; Value: Get ( AccountPrivilegeSetName ) ]
-Set Variable [ $allow ; Value: Case (
-	$priv = "[Full Access]" ; True ;
-	$priv = "Admin" ; True ;
-	$priv = "Manager" ; True ;
-	False
+Set Variable [ $recordAccess ; Value: Get ( RecordAccess ) ]
+Set Variable [ $layoutAccess ; Value: Get ( LayoutAccess ) ]
+Set Variable [ $allow ; Value: GetAsNumber ( $recordAccess ) = 2 and GetAsNumber ( $layoutAccess ) = 2 ]
+Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
+	[ "canEditDelete" ; $allow ; JSONBoolean ] ;
+	[ "recordAccess" ; $recordAccess ; JSONNumber ] ;
+	[ "layoutAccess" ; $layoutAccess ; JSONNumber ]
 ) ]
-Set Variable [ $json ; Value: JSONSetElement ( "{}" ; [ "canEditDelete" ; $allow ; JSONBoolean ] ) ]
 Set Variable [ $jsonText ; Value: GetAsText ( $json ) ]
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUiCapabilities" ; Parameters: $jsonText ]
 Exit Script [ Text Result: True ]

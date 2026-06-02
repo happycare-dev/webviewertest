@@ -171,11 +171,9 @@
   function recordAccessDescription(code) {
     var n = parseInt(code, 10);
     var map = {
-      0: '未判定、またはデータベースがクライアントで開かれていません',
-      1: 'レコードへのアクセスなし',
-      2: '表示のみ',
-      3: '限定された修正（削除不可など）',
-      4: 'レコードの編集が可能'
+      0: 'レコードの表示・編集権限なし',
+      1: '表示のみ',
+      2: 'レコードの編集が可能'
     };
     if (map[n] === undefined) return 'コード: ' + String(code);
     return map[n] + '（' + n + '）';
@@ -184,10 +182,9 @@
   function layoutAccessDescription(code) {
     var n = parseInt(code, 10);
     var map = {
-      0: '未判定、またはデータベースがクライアントで開かれていません',
-      1: 'レイアウトへのアクセスなし',
-      2: '表示のみ',
-      3: 'レイアウトおよびレコードの変更が可能'
+      0: 'このレイアウトからレコードへアクセス不可',
+      1: '表示のみ',
+      2: 'レイアウト経由でレコード変更が可能'
     };
     if (map[n] === undefined) return 'コード: ' + String(code);
     return map[n] + '（' + n + '）';
@@ -241,6 +238,24 @@
     return false;
   }
 
+  function hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+
+  function numericAccessCode(v) {
+    if (v === undefined || v === null || v === '') return null;
+    var n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function accessAllowsEditDelete(payload) {
+    if (hasOwn(payload, 'recordAccess') || hasOwn(payload, 'layoutAccess')) {
+      return numericAccessCode(payload.recordAccess) === 2 &&
+        numericAccessCode(payload.layoutAccess) === 2;
+    }
+    return coerceBoolean(payload.canEditDelete);
+  }
+
   window.receiveUiCapabilities = function () {
     var rawIn = firstSecurityArgument(arguments);
     var parsed;
@@ -251,7 +266,7 @@
       return;
     }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
-    state.canEditDelete = coerceBoolean(parsed.canEditDelete);
+    state.canEditDelete = accessAllowsEditDelete(parsed);
     if (typeof EV.render === 'function') EV.render();
   };
 
@@ -268,6 +283,11 @@
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       alert('\u6a29\u9650\u60c5\u5831\u304c\u7a7a\u3067\u3059\u3002GetSecurityInfo \u3067 Perform JavaScript \u306e\u30d1\u30e9\u30e1\u30fc\u30bf\u306b GetAsText ( $json ) \u3092\u6e21\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u8a2d\u5b9a\u30c0\u30a4\u30a2\u30ed\u30b0\u3067\u30d1\u30e9\u30e1\u30fc\u30bf\u304c\u7a7a\u306b\u306a\u3063\u3066\u3044\u306a\u3044\u304b\u3082\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002');
       return;
+    }
+
+    if (hasOwn(parsed, 'recordAccess') || hasOwn(parsed, 'layoutAccess')) {
+      state.canEditDelete = accessAllowsEditDelete(parsed);
+      if (typeof EV.render === 'function') EV.render();
     }
 
     var accEl = document.getElementById('secAccount');
