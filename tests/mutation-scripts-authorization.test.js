@@ -10,9 +10,9 @@ function readScript(name) {
 }
 
 function textBeforeMutation(scriptText) {
-  const mutationIndex = scriptText.indexOf('Execute FileMaker Data API');
-  assert.notEqual(mutationIndex, -1, 'script must execute the FileMaker Data API');
-  return scriptText.slice(0, mutationIndex);
+  const mutationMatch = /^Execute FileMaker Data API/m.exec(scriptText);
+  assert.ok(mutationMatch, 'script must execute the FileMaker Data API');
+  return scriptText.slice(0, mutationMatch.index);
 }
 
 function assertRequiresUiCapability(scriptName) {
