@@ -87,7 +87,7 @@ Scripts **must** load in this order (`employee-viewer.html`):
 ## FileMaker script implementation notes
 
 - **UpdateEmployeeDataAPI:** Build `$fd` with **per-field** `JSONGetElement($param ; "fieldData.…")`; avoid stuffing whole nested `fieldData` into **`JSONObject`** in one step (can cause **1708**).
-- **GetData / UpdateEmployeeDataAPI / DeleteRecord:** Require **`$$wvLoginAccount`** before touching EmployeeM through Data API; update/delete additionally require **`$$wvLoginCanEditDelete`**.
+- **GetData / GetLocations / UpdateEmployeeDataAPI / DeleteRecord:** Require **`$$wvLoginAccount`** before touching EmployeeM through Data API or SQL; update/delete additionally require **`$$wvLoginCanEditDelete`**.
 - **UpdateEmployeeDataAPI:** Uses **`options`** `entrymode` / `prohibitmode` **`script`** to mitigate **201 Field cannot be modified**.
 - **DeleteRecord:** Uses Data API **`action: delete`**. Legacy layout/find/delete steps are **comment-only** in `DeleteRecord.txt`.
 

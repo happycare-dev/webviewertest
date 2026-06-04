@@ -98,6 +98,18 @@ test('GetData refuses to return employee rows before successful Web Viewer login
   );
 });
 
+test('GetLocations refuses to return EmployeeM-derived locations before login', () => {
+  const script = readScript('GetLocations.txt');
+  const steps = executableSteps(script);
+
+  assertBefore(
+    steps,
+    'If [ IsEmpty ( $$wvLoginAccount ) ]',
+    'ExecuteSQL(',
+    'GetLocations must enforce login before reading distinct EmployeeM locations'
+  );
+});
+
 test('mutating scripts require login-issued edit/delete authorization before Data API writes', () => {
   ['UpdateEmployeeDataAPI.txt', 'DeleteRecord.txt'].forEach((name) => {
     const script = readScript(name);
