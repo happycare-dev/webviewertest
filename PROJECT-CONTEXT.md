@@ -37,6 +37,7 @@ Scripts **must** load in this order (`employee-viewer.html`):
 
 | FileMaker script | Trigger from JS | JS callback / entry |
 |------------------|-----------------|----------------------|
+| **LoginValidate** | `FileMaker.PerformScript('LoginValidate', JSON.stringify({ account, password }))` | `window.receiveLoginResult(…)`; on success sets FileMaker globals **`$$wvLoginAccount`**, **`$$wvLoginPrivilegeSet`**, **`$$wvLoginCanEditDelete`** before navigating to `WebViewerTest` |
 | **GetData** | `FileMaker.PerformScript('GetData', param)` | `window.receiveDataFromFileMaker(result)` |
 | **GetLocations** | `FileMaker.PerformScript('GetLocations', '')` | `window.receiveLocations(result)` |
 | **GetUiCapabilities** | `FileMaker.PerformScript('GetUiCapabilities', '')` | `window.receiveUiCapabilities(…)` — sets **`state.canEditDelete`** from JSON `{ "canEditDelete": true/false }` |
@@ -48,13 +49,14 @@ Scripts **must** load in this order (`employee-viewer.html`):
 
 **On `EV` (used from init / table):** `openViewModal`, `closeViewModal`, `openEditModal`, `closeEditModal`, `saveEditModal`, etc.
 
-**Startup order** (`employee-viewer-init.js`, ~100 ms after load): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). Capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons.
+**Startup order** (`employee-viewer-init.js`, ~100 ms after load): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). Capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons. `WebViewerTest` must be reached via **`LoginValidate`** so the `$$wvLogin*` globals exist before these scripts run.
 
 **Reference copies** of FileMaker script text live under **` FileMakerScripts/`** (folder name on disk may include a **leading space** — verify with `ls` / Finder). Files include: `GetData.txt`, `GetLocations.txt`, `DeleteRecord.txt`, `UpdateEmployeeDataAPI.txt`, **`GetUiCapabilities.txt`**, **`GetSecurityInfo.txt`**.
 
 ### GetUiCapabilities (FileMaker)
 
-- Builds JSON with **`canEditDelete`** (JSONBoolean) from **`Get(AccountPrivilegeSetName)`** and a **`Case`** list of allowed privilege set names (e.g. `[Full Access]`, `Admin`, `Manager` — **must match File → Manage Security exactly**).
+- Builds JSON with **`canEditDelete`** (JSONBoolean) from **`$$wvLoginCanEditDelete`**, which is derived by **`LoginValidate`** from EmployeeM field **`アクセス権セット`** (e.g. `[Full Access]`, `Admin`, `Manager`).
+- Do **not** grant Web Viewer edit/delete from **`Get(AccountPrivilegeSetName)`**; that is the FileMaker connection account and may be more privileged than the employee who logged in.
 - Performs **`receiveUiCapabilities`** with **`GetAsText($json)`** (or equivalent text) so the Web Viewer receives parseable JSON.
 
 ### GetSecurityInfo (FileMaker)
@@ -85,6 +87,7 @@ Scripts **must** load in this order (`employee-viewer.html`):
 ## FileMaker script implementation notes
 
 - **UpdateEmployeeDataAPI:** Build `$fd` with **per-field** `JSONGetElement($param ; "fieldData.…")`; avoid stuffing whole nested `fieldData` into **`JSONObject`** in one step (can cause **1708**).
+- **GetData / UpdateEmployeeDataAPI / DeleteRecord:** Require **`$$wvLoginAccount`** before touching EmployeeM through Data API; update/delete additionally require **`$$wvLoginCanEditDelete`**.
 - **UpdateEmployeeDataAPI:** Uses **`options`** `entrymode` / `prohibitmode` **`script`** to mitigate **201 Field cannot be modified**.
 - **DeleteRecord:** Uses Data API **`action: delete`**. Legacy layout/find/delete steps are **comment-only** in `DeleteRecord.txt`.
 
@@ -93,7 +96,7 @@ Scripts **must** load in this order (`employee-viewer.html`):
 - **Title bar:** heading **従業員一覧** + **権限確認** (`#btnSecurityInfo`) → **`GetSecurityInfo`** → **`receiveSecurityInfo`** → **`#securityModal`** (account, privilege set, layout/record access text, extended privileges list with Japanese labels in JS).
 - **Table:** `#` column, 氏名 … 事業所略名, 在籍, dates, **actions** column.
 - **Actions column:** **View** (eye) always — **`EV.openViewModal`** (`#viewModal`, read-only). **Edit** / **Delete** render **only if** **`state.canEditDelete`**; otherwise only the view button.
-- **Guards:** `confirmDelete`, `executeDelete`, `openEditModal`, `saveEditModal` **return early** if **`!state.canEditDelete`** (defense in depth).
+- **Guards:** `confirmDelete`, `executeDelete`, `openEditModal`, `saveEditModal` **return early** if **`!state.canEditDelete`**. FileMaker scripts also enforce the same login-issued permission before Data API mutations.
 - **Modals:** **deleteModal**, **editModal**, **viewModal**, **securityModal** — each has **`.modal-drag-handle`**; **`EV.initDraggableModal`** is called for all four in **`employee-viewer-init.js`**.
 - **Delete modal:** Shows **「氏名」** via **`#deleteModalFullName`**.
 - **Row highlight** on view / delete / edit from actions; cleared on cancel/close, delete error, **`EV.runFileMakerScript`**, etc. (see **`EV.clearRowHighlight`** usage in data/actions).
