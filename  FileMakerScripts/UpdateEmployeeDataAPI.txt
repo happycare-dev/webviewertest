@@ -10,6 +10,12 @@
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
 #
+If [ IsEmpty ( $$wvLoginAccount ) or $$wvLoginCanEditDelete ≠ True ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "login required or insufficient privileges" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUpdateResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+#
 If [ IsEmpty ( $recordId ) ]
 	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "3" ; JSONString ] ; [ "messages[0].message" ; "recordId is required" ; JSONString ] ) ]
 	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUpdateResult" ; Parameters: $result ]

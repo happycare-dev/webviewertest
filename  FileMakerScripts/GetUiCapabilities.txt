@@ -1,15 +1,15 @@
 # GetUiCapabilities — tells Web Viewer whether to show Edit/Delete (Perform JS → receiveUiCapabilities, object web)
 #
-# Allowed privilege set names must match File → Manage Security exactly (add/remove Case lines as needed).
+# LoginValidate sets $$wvLoginAccount / $$wvLoginPrivilegeSet / $$wvLoginCanEditDelete after password validation.
+# Do not derive UI permissions from Get(AccountPrivilegeSetName): that is the FileMaker session account, not the logged-in employee.
 
-Set Variable [ $priv ; Value: Get ( AccountPrivilegeSetName ) ]
-Set Variable [ $allow ; Value: Case (
-	$priv = "[Full Access]" ; True ;
-	$priv = "Admin" ; True ;
-	$priv = "Manager" ; True ;
-	False
-) ]
-Set Variable [ $json ; Value: JSONSetElement ( "{}" ; [ "canEditDelete" ; $allow ; JSONBoolean ] ) ]
+If [ IsEmpty ( $$wvLoginAccount ) ]
+	Set Variable [ $json ; Value: JSONSetElement ( "{}" ; [ "canEditDelete" ; False ; JSONBoolean ] ; [ "authenticated" ; False ; JSONBoolean ] ; [ "message" ; "login required" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUiCapabilities" ; Parameters: GetAsText ( $json ) ]
+	Exit Script [ Text Result: False ]
+End If
+
+Set Variable [ $json ; Value: JSONSetElement ( "{}" ; [ "canEditDelete" ; $$wvLoginCanEditDelete ; JSONBoolean ] ; [ "authenticated" ; True ; JSONBoolean ] ; [ "accountName" ; $$wvLoginAccount ; JSONString ] ; [ "privilegeSetName" ; $$wvLoginPrivilegeSet ; JSONString ] ) ]
 Set Variable [ $jsonText ; Value: GetAsText ( $json ) ]
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUiCapabilities" ; Parameters: $jsonText ]
 Exit Script [ Text Result: True ]

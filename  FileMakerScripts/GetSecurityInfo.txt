@@ -4,9 +4,14 @@
 # Builds one JSON object (passed as script parameter to the JS function).
 # Get(LayoutAccess) requires FileMaker 18 or later; on older versions, remove the layoutAccess JSONSetElement line.
 
+Set Variable [ $effectiveAccount ; Value: Case ( not IsEmpty ( $$wvLoginAccount ) ; $$wvLoginAccount ; Get ( AccountName ) ) ]
+Set Variable [ $effectivePrivilegeSet ; Value: Case ( not IsEmpty ( $$wvLoginPrivilegeSet ) ; $$wvLoginPrivilegeSet ; Get ( AccountPrivilegeSetName ) ) ]
+
 Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
-	[ "accountName" ; Get ( AccountName ) ; JSONString ] ;
-	[ "privilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
+	[ "accountName" ; $effectiveAccount ; JSONString ] ;
+	[ "privilegeSetName" ; $effectivePrivilegeSet ; JSONString ] ;
+	[ "fileMakerAccountName" ; Get ( AccountName ) ; JSONString ] ;
+	[ "fileMakerPrivilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
 	[ "extendedPrivilegesRaw" ; Get ( AccountExtendedPrivileges ) ; JSONString ]
 ) ]
 Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "recordAccess" ; Get ( RecordAccess ) ; JSONNumber ] ) ]
