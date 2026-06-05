@@ -19,5 +19,14 @@ End If
 # 
 Execute FileMaker Data API [ Select ; Target: $result ; $request ]
 # 
+# Remove credential fields from the Data API payload before it reaches browser JavaScript.
+Set Variable [ $recordCount ; Value: ValueCount ( JSONListKeys ( $result ; "response.data" ) ) ]
+Set Variable [ $i ; Value: 0 ]
+Loop
+	Exit Loop If [ $i ≥ $recordCount ]
+	Set Variable [ $result ; Value: JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" ) ]
+	Set Variable [ $i ; Value: $i + 1 ]
+End Loop
+# 
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
 Exit Script [ Text Result: True ]
