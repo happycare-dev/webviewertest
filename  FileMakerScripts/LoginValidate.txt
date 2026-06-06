@@ -14,6 +14,11 @@ Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $account ; Value: JSONGetElement ( $param ; "account" ) ]
 Set Variable [ $password ; Value: JSONGetElement ( $param ; "password" ) ]
 
+# A new login attempt must not inherit capabilities from a previous successful login in the same FileMaker session.
+Set Variable [ $$wvLoginAccount ; Value: "" ]
+Set Variable [ $$wvLoginPrivilegeSet ; Value: "" ]
+Set Variable [ $$wvLoginCanEditDelete ; Value: False ]
+
 # 0 = 失敗（レイアウト移動しない）、1 = すべて合格
 Set Variable [ $loginSuccess ; Value: 0 ]
 Set Variable [ $errorCode ; Value: "" ]
@@ -74,6 +79,15 @@ If [ $loginSuccess ≠ 1 ]
 End If
 
 # --- 成功時のみ（上で Exit 済みのため、ここに到達するのは $loginSuccess = 1 のときだけ）---
+# Web Viewer scripts must trust this validated login state, not the ambient FileMaker account directly.
+Set Variable [ $$wvLoginAccount ; Value: $account ]
+Set Variable [ $$wvLoginPrivilegeSet ; Value: Get ( AccountPrivilegeSetName ) ]
+Set Variable [ $$wvLoginCanEditDelete ; Value: Case (
+	$$wvLoginPrivilegeSet = "[Full Access]" ; True ;
+	$$wvLoginPrivilegeSet = "Admin" ; True ;
+	$$wvLoginPrivilegeSet = "Manager" ; True ;
+	False
+) ]
 # Web Viewer 側で「ログイン中」のまま固まらないよう、先に成功コールバックで busy を解除してからレイアウト移動
 Set Variable [ $okOut ; Value: JSONSetElement ( "{}" ; [ "ok" ; True ; JSONBoolean ] ) ]
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLoginResult" ; Parameters: GetAsText ( $okOut ) ]
