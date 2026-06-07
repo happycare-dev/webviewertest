@@ -76,7 +76,7 @@ test('UpdateEmployeeDataAPI rejects unauthenticated or read-only callers before 
   assertBefore(
     script,
     'If [ IsEmpty ( $$wvLoginAccount ) or not $$wvLoginCanEditDelete ]',
-    'Execute FileMaker Data API',
+    'Execute FileMaker Data API [ Select',
     'UpdateEmployeeDataAPI'
   );
   assertContains(script, 'Not authorized to update records', 'UpdateEmployeeDataAPI');
@@ -88,7 +88,7 @@ test('DeleteRecord rejects unauthenticated or read-only callers before mutation'
   assertBefore(
     script,
     'If [ IsEmpty ( $$wvLoginAccount ) or not $$wvLoginCanEditDelete ]',
-    'Execute FileMaker Data API',
+    'Execute FileMaker Data API [ Select',
     'DeleteRecord'
   );
   assertContains(script, 'Not authorized to delete records', 'DeleteRecord');
