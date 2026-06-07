@@ -65,6 +65,8 @@ test('GetData requires login and strips password fields before returning data', 
   assertContains(script, 'JSONDeleteElement', 'GetData');
   assertContains(script, 'fieldData.パスワード', 'GetData');
   assertContains(script, 'Set Variable [ $safeResult ; Value: $result ]', 'GetData');
+  assertBefore(script, 'JSONDeleteElement', 'Parameters: $safeResult', 'GetData password stripping');
+  assertContains(script, 'Parameters: $safeResult', 'GetData callback');
   assertNotContains(script, 'Parameters: $result', 'GetData callback');
 });
 
