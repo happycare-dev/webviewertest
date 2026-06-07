@@ -50,7 +50,11 @@ test('LoginValidate clears and sets trusted Web Viewer login globals', () => {
 test('GetUiCapabilities reports only the trusted login capability', () => {
   const script = readScript('GetUiCapabilities.txt');
 
-  assertContains(script, 'Set Variable [ $allow ; Value: $$wvLoginCanEditDelete ]', 'GetUiCapabilities');
+  assertContains(
+    script,
+    'Set Variable [ $allow ; Value: not IsEmpty ( $$wvLoginAccount ) and $$wvLoginCanEditDelete ]',
+    'GetUiCapabilities'
+  );
   assertNotContains(script, 'Get ( AccountPrivilegeSetName )', 'GetUiCapabilities');
 });
 
