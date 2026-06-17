@@ -33,13 +33,13 @@ function assertBefore(text, earlier, later, message) {
   );
 }
 
-function assertRejectsBeforeDataApi(scriptName, globalName, callbackName) {
+function assertRejectsBeforeOperation(scriptName, globalName, callbackName, operationMarker) {
   const script = readScript(scriptName);
   assertBefore(
     script,
     `If [ IsEmpty ( ${globalName} ) ]`,
-    'Execute FileMaker Data API',
-    `${scriptName} must reject unauthenticated calls before using the Data API.`
+    operationMarker,
+    `${scriptName} must reject unauthenticated calls before reading protected data.`
   );
   assertBefore(
     script,
@@ -103,7 +103,7 @@ assertBefore(
   'LoginValidate must establish trusted login state before opening the viewer layout.'
 );
 
-assertRejectsBeforeDataApi('GetData.txt', '$$wvLoginAccount', 'receiveDataFromFileMaker');
+assertRejectsBeforeOperation('GetData.txt', '$$wvLoginAccount', 'receiveDataFromFileMaker', 'Execute FileMaker Data API');
 assertBefore(
   readScript('GetData.txt'),
   'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )',
@@ -111,7 +111,7 @@ assertBefore(
   'GetData must strip password fields before returning records to JavaScript.'
 );
 
-assertRejectsBeforeDataApi('GetLocations.txt', '$$wvLoginAccount', 'receiveLocations');
+assertRejectsBeforeOperation('GetLocations.txt', '$$wvLoginAccount', 'receiveLocations', 'ExecuteSQL');
 
 const caps = readScript('GetUiCapabilities.txt');
 assertContains(

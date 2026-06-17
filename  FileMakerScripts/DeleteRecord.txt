@@ -25,6 +25,12 @@
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
 #
+If [ not $$wvLoginCanEditDelete ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "Permission denied" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDeleteResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+#
 If [ IsEmpty ( $recordId ) ]
 	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "3" ; JSONString ] ; [ "messages[0].message" ; "recordId is required" ; JSONString ] ) ]
 	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDeleteResult" ; Parameters: $result ]
