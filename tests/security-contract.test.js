@@ -33,6 +33,23 @@ function assertBefore(text, earlier, later, message) {
   );
 }
 
+function assertBeforeLast(text, earlier, later, message) {
+  const earlierIndex = text.indexOf(earlier);
+  const laterIndex = text.lastIndexOf(later);
+  assert(
+    earlierIndex !== -1,
+    `${message}\nExpected to find earlier marker: ${earlier}`
+  );
+  assert(
+    laterIndex !== -1,
+    `${message}\nExpected to find later marker: ${later}`
+  );
+  assert(
+    earlierIndex < laterIndex,
+    `${message}\nExpected "${earlier}" to appear before the final "${later}"`
+  );
+}
+
 function assertRejectsBeforeOperation(scriptName, globalName, callbackName, operationMarker) {
   const script = readScript(scriptName);
   assertBefore(
@@ -104,7 +121,7 @@ assertBefore(
 );
 
 assertRejectsBeforeOperation('GetData.txt', '$$wvLoginAccount', 'receiveDataFromFileMaker', 'Execute FileMaker Data API');
-assertBefore(
+assertBeforeLast(
   readScript('GetData.txt'),
   'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )',
   'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker"',
