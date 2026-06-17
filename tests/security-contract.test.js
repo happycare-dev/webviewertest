@@ -68,7 +68,7 @@ function assertRejectsBeforeOperation(scriptName, globalName, callbackName, oper
 
 function assertCanEditGuardBeforeDataApi(scriptName, callbackName) {
   const script = readScript(scriptName);
-  assertBefore(
+  assertBeforeLast(
     script,
     'If [ not $$wvLoginCanEditDelete ]',
     'Execute FileMaker Data API',
