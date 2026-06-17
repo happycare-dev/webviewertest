@@ -50,35 +50,42 @@ function assertBeforeLast(text, earlier, later, message) {
   );
 }
 
-function assertRejectsBeforeOperation(scriptName, globalName, callbackName, operationMarker) {
+function assertGuardFailureBeforeOperation(scriptName, guardLine, callbackName, operationMarker, message) {
   const script = readScript(scriptName);
-  assertBefore(
-    script,
-    `If [ IsEmpty ( ${globalName} ) ]`,
-    operationMarker,
-    `${scriptName} must reject unauthenticated calls before reading protected data.`
+  const guardIndex = script.indexOf(guardLine);
+  const callbackIndex = guardIndex === -1 ? -1 : script.indexOf(callbackName, guardIndex);
+  const exitIndex = callbackIndex === -1 ? -1 : script.indexOf('Exit Script [ Text Result: False ]', callbackIndex);
+  const operationIndex = script.lastIndexOf(operationMarker);
+
+  assert(
+    guardIndex !== -1,
+    `${message}\nExpected to find guard: ${guardLine}`
   );
-  assertBefore(
-    script,
-    callbackName,
-    'Exit Script [ Text Result: False ]',
-    `${scriptName} must return an error callback when authorization fails.`
+  assert(
+    callbackIndex !== -1,
+    `${message}\nExpected to find error callback after guard: ${callbackName}`
+  );
+  assert(
+    exitIndex !== -1,
+    `${message}\nExpected to find false exit after error callback.`
+  );
+  assert(
+    operationIndex !== -1,
+    `${message}\nExpected to find protected operation: ${operationMarker}`
+  );
+  assert(
+    guardIndex < callbackIndex && callbackIndex < exitIndex && exitIndex < operationIndex,
+    `${message}\nExpected guard, error callback, and false exit before protected operation.`
   );
 }
 
 function assertCanEditGuardBeforeDataApi(scriptName, callbackName) {
-  const script = readScript(scriptName);
-  assertBeforeLast(
-    script,
+  assertGuardFailureBeforeOperation(
+    scriptName,
     'If [ not $$wvLoginCanEditDelete ]',
-    'Execute FileMaker Data API',
-    `${scriptName} must check login-derived edit/delete permission before mutation.`
-  );
-  assertBefore(
-    script,
     callbackName,
-    'Exit Script [ Text Result: False ]',
-    `${scriptName} must return an error callback when permission is denied.`
+    'Execute FileMaker Data API',
+    `${scriptName} must check login-derived edit/delete permission and exit before mutation.`
   );
 }
 
@@ -97,6 +104,24 @@ assertContains(
   login,
   'Set Variable [ $$wvLoginCanEditDelete ; Value: False ]',
   'LoginValidate must clear trusted edit/delete state before validating credentials.'
+);
+assertBefore(
+  login,
+  'Set Variable [ $$wvLoginAccount ; Value: "" ]',
+  'Execute FileMaker Data API',
+  'LoginValidate must clear trusted login state before credential validation.'
+);
+assertBefore(
+  login,
+  'Set Variable [ $$wvLoginPrivilegeSet ; Value: "" ]',
+  'Execute FileMaker Data API',
+  'LoginValidate must clear trusted privilege state before credential validation.'
+);
+assertBefore(
+  login,
+  'Set Variable [ $$wvLoginCanEditDelete ; Value: False ]',
+  'Execute FileMaker Data API',
+  'LoginValidate must clear trusted edit/delete state before credential validation.'
 );
 assertContains(
   login,
@@ -120,7 +145,13 @@ assertBefore(
   'LoginValidate must establish trusted login state before opening the viewer layout.'
 );
 
-assertRejectsBeforeOperation('GetData.txt', '$$wvLoginAccount', 'receiveDataFromFileMaker', 'Execute FileMaker Data API');
+assertGuardFailureBeforeOperation(
+  'GetData.txt',
+  'If [ IsEmpty ( $$wvLoginAccount ) ]',
+  'receiveDataFromFileMaker',
+  'Execute FileMaker Data API',
+  'GetData must reject unauthenticated calls before reading employee records.'
+);
 assertBeforeLast(
   readScript('GetData.txt'),
   'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )',
@@ -128,7 +159,13 @@ assertBeforeLast(
   'GetData must strip password fields before returning records to JavaScript.'
 );
 
-assertRejectsBeforeOperation('GetLocations.txt', '$$wvLoginAccount', 'receiveLocations', 'ExecuteSQL');
+assertGuardFailureBeforeOperation(
+  'GetLocations.txt',
+  'If [ IsEmpty ( $$wvLoginAccount ) ]',
+  'receiveLocations',
+  'ExecuteSQL',
+  'GetLocations must reject unauthenticated calls before reading employee locations.'
+);
 
 const caps = readScript('GetUiCapabilities.txt');
 assertContains(
