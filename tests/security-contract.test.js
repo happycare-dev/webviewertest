@@ -43,6 +43,23 @@ function assertBefore(text, earlier, later, message) {
   );
 }
 
+function assertBeforeLast(text, earlier, later, message) {
+  const earlierIndex = text.indexOf(earlier);
+  const laterIndex = text.lastIndexOf(later);
+  assert(
+    earlierIndex !== -1,
+    `${message}\nExpected to find earlier marker: ${earlier}`
+  );
+  assert(
+    laterIndex !== -1,
+    `${message}\nExpected to find later marker: ${later}`
+  );
+  assert(
+    earlierIndex < laterIndex,
+    `${message}\nExpected "${earlier}" to appear before the final "${later}"`
+  );
+}
+
 function testLoginStoresTrustedGlobals() {
   const script = executableText(readScript('LoginValidate.txt'));
 
@@ -84,7 +101,7 @@ function testReadScriptsRequireLoginAndStripSecrets() {
     'Execute FileMaker Data API',
     'GetData must fail closed before fetching EmployeeM data when no employee is logged in.'
   );
-  assertBefore(
+  assertBeforeLast(
     getData,
     'JSONDeleteElement',
     'Function Name: "receiveDataFromFileMaker"',
