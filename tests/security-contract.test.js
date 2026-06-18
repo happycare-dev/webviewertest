@@ -65,17 +65,17 @@ function testLoginStoresTrustedGlobals() {
 
   assertContains(
     script,
-    'Set Variable [ $$wvLoginAccount',
+    'Set Variable [ $$wvLoginAccount ; Value: $account ]',
     'LoginValidate must store the authenticated employee account after validation.'
   );
   assertContains(
     script,
-    'Set Variable [ $$wvLoginPrivilegeSet',
+    'Set Variable [ $$wvLoginPrivilegeSet ; Value: $employeePrivilegeSet ]',
     'LoginValidate must store the employee privilege set after validation.'
   );
   assertContains(
     script,
-    'Set Variable [ $$wvLoginCanEditDelete',
+    'Set Variable [ $$wvLoginCanEditDelete ; Value: Case (',
     'LoginValidate must store the derived edit/delete capability after validation.'
   );
   assertContains(
@@ -83,9 +83,9 @@ function testLoginStoresTrustedGlobals() {
     'fieldData.アクセス権セット',
     'LoginValidate must derive permissions from the authenticated EmployeeM row.'
   );
-  assertBefore(
+  assertBeforeLast(
     script,
-    'Set Variable [ $$wvLoginCanEditDelete',
+    'Set Variable [ $$wvLoginCanEditDelete ; Value: Case (',
     'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLoginResult"',
     'Trusted login globals must be populated before the success callback/layout transition.'
   );
