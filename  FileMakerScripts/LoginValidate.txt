@@ -13,6 +13,9 @@
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $account ; Value: JSONGetElement ( $param ; "account" ) ]
 Set Variable [ $password ; Value: JSONGetElement ( $param ; "password" ) ]
+Set Variable [ $$wvLoginAccount ; Value: "" ]
+Set Variable [ $$wvLoginPrivilegeSet ; Value: "" ]
+Set Variable [ $$wvLoginCanEditDelete ; Value: False ]
 
 # 0 = 失敗（レイアウト移動しない）、1 = すべて合格
 Set Variable [ $loginSuccess ; Value: 0 ]
@@ -42,6 +45,7 @@ Else
 	Else
 		Set Variable [ $flag ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.在籍フラグ" ) ]
 		Set Variable [ $storedPw ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.パスワード" ) ]
+		Set Variable [ $employeePrivilegeSet ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.アクセス権セット" ) ]
 		# --- 在籍のみ ---
 		If [ GetAsNumber ( $flag ) ≠ 1 ]
 			Set Variable [ $errorCode ; Value: "not_active" ]
@@ -74,6 +78,15 @@ If [ $loginSuccess ≠ 1 ]
 End If
 
 # --- 成功時のみ（上で Exit 済みのため、ここに到達するのは $loginSuccess = 1 のときだけ）---
+# 従業員ログインで検証した値だけを、Web Viewer 後続スクリプトの信頼済み状態として使う。
+Set Variable [ $$wvLoginAccount ; Value: $account ]
+Set Variable [ $$wvLoginPrivilegeSet ; Value: $employeePrivilegeSet ]
+Set Variable [ $$wvLoginCanEditDelete ; Value: Case (
+	$employeePrivilegeSet = "[Full Access]" ; True ;
+	$employeePrivilegeSet = "Admin" ; True ;
+	$employeePrivilegeSet = "Manager" ; True ;
+	False
+) ]
 # Web Viewer 側で「ログイン中」のまま固まらないよう、先に成功コールバックで busy を解除してからレイアウト移動
 Set Variable [ $okOut ; Value: JSONSetElement ( "{}" ; [ "ok" ; True ; JSONBoolean ] ) ]
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLoginResult" ; Parameters: GetAsText ( $okOut ) ]
