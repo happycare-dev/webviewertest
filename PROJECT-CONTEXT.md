@@ -48,14 +48,17 @@ Scripts **must** load in this order (`employee-viewer.html`):
 
 **On `EV` (used from init / table):** `openViewModal`, `closeViewModal`, `openEditModal`, `closeEditModal`, `saveEditModal`, etc.
 
-**Startup order** (`employee-viewer-init.js`, ~100 ms after load): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). Capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons.
+**Startup order** (`employee-viewer-init.js`, ~100 ms after load, after successful **LoginValidate** layout transition): **`GetUiCapabilities`** → **`GetLocations`** → **`GetData`** (via `EV.runFileMakerScript(0, …)`). Capabilities must run before or with first render so **`canEditDelete`** is correct for edit/delete buttons.
 
 **Reference copies** of FileMaker script text live under **` FileMakerScripts/`** (folder name on disk may include a **leading space** — verify with `ls` / Finder). Files include: `GetData.txt`, `GetLocations.txt`, `DeleteRecord.txt`, `UpdateEmployeeDataAPI.txt`, **`GetUiCapabilities.txt`**, **`GetSecurityInfo.txt`**.
 
-### GetUiCapabilities (FileMaker)
+### Login-derived authorization (FileMaker)
 
-- Builds JSON with **`canEditDelete`** (JSONBoolean) from **`Get(AccountPrivilegeSetName)`** and a **`Case`** list of allowed privilege set names (e.g. `[Full Access]`, `Admin`, `Manager` — **must match File → Manage Security exactly**).
-- Performs **`receiveUiCapabilities`** with **`GetAsText($json)`** (or equivalent text) so the Web Viewer receives parseable JSON.
+- **LoginValidate** must clear `$$wvLoginAccount`, `$$wvLoginPrivilegeSet`, and `$$wvLoginCanEditDelete` at the start of each login attempt, then set them only after EmployeeM account/password/active-status validation succeeds.
+- **LoginValidate** derives `$$wvLoginCanEditDelete` from the authenticated EmployeeM row's **`アクセス権セット`** field (e.g. `[Full Access]`, `Admin`, `Manager`); downstream scripts must not use **`Get(AccountPrivilegeSetName)`** to authorize Web Viewer employees.
+- **GetUiCapabilities** builds JSON with **`canEditDelete`** (JSONBoolean) from trusted `$$wvLoginCanEditDelete`, and performs **`receiveUiCapabilities`** with **`GetAsText($json)`** (or equivalent text) so the Web Viewer receives parseable JSON.
+- **GetData** / **GetLocations** must require `$$wvLoginAccount` before exposing EmployeeM-derived data. **GetData** must delete `fieldData.パスワード` from all returned records before calling `receiveDataFromFileMaker`.
+- **UpdateEmployeeDataAPI** / **DeleteRecord** must check `$$wvLoginCanEditDelete` before `Execute FileMaker Data API`; UI-only edit/delete guards are not an authorization boundary.
 
 ### GetSecurityInfo (FileMaker)
 
@@ -118,4 +121,4 @@ Scripts **must** load in this order (`employee-viewer.html`):
 
 ---
 
-*Last updated to match: split JS modules, `canEditDelete` / GetUiCapabilities, view & security modals, GetSecurityInfo, table actions (view always, edit/delete conditional).*
+*Last updated to match: split JS modules, login-derived `canEditDelete` / GetUiCapabilities, view & security modals, GetSecurityInfo, table actions (view always, edit/delete conditional), and server-side mutation guards.*
