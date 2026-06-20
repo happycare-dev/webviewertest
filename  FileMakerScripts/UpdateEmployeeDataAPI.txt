@@ -7,6 +7,12 @@
 # Note: Error 1708 often occurs when passing JSONGetElement ( $param ; "fieldData" ) directly
 # into JSONSetElement ... JSONObject. Building fieldData from each key avoids that.
 
+If [ IsEmpty ( $$wvLoginAccount ) or not $$wvLoginCanEditDelete ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "permission denied" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUpdateResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+#
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
 #
