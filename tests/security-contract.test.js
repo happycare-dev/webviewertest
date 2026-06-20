@@ -49,7 +49,7 @@ function run() {
   assertBefore(
     loginValidate,
     '$$wvLoginAccount ; Value: $account',
-    'Go to Layout',
+    'Go to Layout [ "WebViewerTest"',
     'Trusted login globals must be set before entering the data layout'
   );
 
