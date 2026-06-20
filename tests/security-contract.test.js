@@ -53,15 +53,20 @@ function run() {
     'Trusted login globals must be set before entering the data layout'
   );
 
-  [getData, getLocations].forEach((script) => {
-    assertContains(script, '$$wvLoginAccount', 'Read scripts must require a validated employee login');
-    assertBefore(
-      script,
-      '$$wvLoginAccount',
-      'Execute FileMaker Data API',
-      'Read authorization must run before Data API access'
-    );
-  });
+  assertContains(getData, '$$wvLoginAccount', 'GetData must require a validated employee login');
+  assertBefore(
+    getData,
+    '$$wvLoginAccount',
+    'Execute FileMaker Data API',
+    'GetData authorization must run before Data API access'
+  );
+  assertContains(getLocations, '$$wvLoginAccount', 'GetLocations must require a validated employee login');
+  assertBefore(
+    getLocations,
+    '$$wvLoginAccount',
+    'ExecuteSQL',
+    'GetLocations authorization must run before ExecuteSQL access'
+  );
 
   assertContains(getData, 'JSONDeleteElement', 'GetData must strip sensitive fields before returning records');
   assertContains(getData, 'fieldData.パスワード', 'GetData must explicitly remove password fields');
