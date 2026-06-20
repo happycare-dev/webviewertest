@@ -43,12 +43,12 @@ function run() {
   assertBefore(
     loginValidate,
     '$loginSuccess ; Value: 1',
-    '$$wvLoginAccount',
+    '$$wvLoginAccount ; Value: $account',
     'Trusted login globals must only be set after password validation succeeds'
   );
   assertBefore(
     loginValidate,
-    '$$wvLoginAccount',
+    '$$wvLoginAccount ; Value: $account',
     'Go to Layout',
     'Trusted login globals must be set before entering the data layout'
   );
