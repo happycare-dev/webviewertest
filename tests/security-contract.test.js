@@ -28,6 +28,19 @@ function assertNotContains(haystack, needle, message) {
   assert.strictEqual(haystack.indexOf(needle), -1, message || `Expected not to find ${needle}`);
 }
 
+function assertBeforeAfter(haystack, anchor, first, second, message) {
+  const anchorIndex = haystack.indexOf(anchor);
+  assert.notStrictEqual(anchorIndex, -1, `Expected to find ${anchor}`);
+  const firstIndex = haystack.indexOf(first, anchorIndex);
+  const secondIndex = haystack.indexOf(second, anchorIndex);
+  assert.notStrictEqual(firstIndex, -1, `Expected to find ${first} after ${anchor}`);
+  assert.notStrictEqual(secondIndex, -1, `Expected to find ${second} after ${anchor}`);
+  assert(
+    firstIndex < secondIndex,
+    message || `Expected ${first} to appear before ${second} after ${anchor}`
+  );
+}
+
 function run() {
   const loginValidate = readScript('LoginValidate.txt');
   const getData = readScript('GetData.txt');
@@ -70,11 +83,12 @@ function run() {
 
   assertContains(getData, 'JSONDeleteElement', 'GetData must strip sensitive fields before returning records');
   assertContains(getData, 'fieldData.パスワード', 'GetData must explicitly remove password fields');
-  assertBefore(
+  assertBeforeAfter(
     getData,
+    'Execute FileMaker Data API',
     'JSONDeleteElement',
     'receiveDataFromFileMaker',
-    'GetData must strip passwords before invoking the Web Viewer callback'
+    'GetData must strip passwords before invoking the post-query Web Viewer callback'
   );
 
   assertContains(getUiCapabilities, '$$wvLoginCanEditDelete', 'UI capabilities must come from the validated login');
