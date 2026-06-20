@@ -103,7 +103,7 @@ function run() {
     assertBefore(
       script,
       '$$wvLoginCanEditDelete',
-      'Execute FileMaker Data API',
+      'Execute FileMaker Data API [',
       'Mutation authorization must run before Data API writes'
     );
   });
