@@ -41,7 +41,7 @@ function assertNoPasswordLeak(script) {
   );
 }
 
-function assertLoginRequired(script, scriptName, callbackName) {
+function assertLoginRequired(script, scriptName, callbackName, dataAccessMarker = 'Execute FileMaker Data API') {
   assertContains(
     script,
     'If [ IsEmpty ( $$wvLoginAccount ) ]',
@@ -50,7 +50,7 @@ function assertLoginRequired(script, scriptName, callbackName) {
   assertBefore(
     script,
     'If [ IsEmpty ( $$wvLoginAccount ) ]',
-    'Execute FileMaker Data API',
+    dataAccessMarker,
     `${scriptName} must fail closed before Data API access.`
   );
   assertBefore(
@@ -124,13 +124,13 @@ assertContains(
 assertBefore(
   loginValidate,
   'Set Variable [ $$wvLoginCanEditDelete ; Value: Case (',
-  'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLoginResult"',
+  'Set Variable [ $okOut ; Value: JSONSetElement ( "{}" ; [ "ok" ; True ; JSONBoolean ] ) ]',
   'Trusted login globals must be set before the success callback and layout change.'
 );
 
 assertLoginRequired(getData, 'GetData', 'receiveDataFromFileMaker');
 assertNoPasswordLeak(getData);
-assertLoginRequired(getLocations, 'GetLocations', 'receiveLocations');
+assertLoginRequired(getLocations, 'GetLocations', 'receiveLocations', 'ExecuteSQL(');
 
 assertContains(
   getUiCapabilities,
