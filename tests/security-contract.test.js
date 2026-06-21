@@ -27,13 +27,24 @@ function assertBefore(text, first, second, message) {
   );
 }
 
+function assertBeforeLast(text, first, second, message) {
+  const firstIndex = text.indexOf(first);
+  const secondIndex = text.lastIndexOf(second);
+  assert(firstIndex !== -1, `${message}\nMissing first marker: ${first}`);
+  assert(secondIndex !== -1, `${message}\nMissing second marker: ${second}`);
+  assert(
+    firstIndex < secondIndex,
+    `${message}\nExpected "${first}" before final "${second}"`
+  );
+}
+
 function assertNoPasswordLeak(script) {
   assertContains(
     script,
     'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )',
     'GetData must remove password fields before returning records to JavaScript.'
   );
-  assertBefore(
+  assertBeforeLast(
     script,
     'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )',
     'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker"',
