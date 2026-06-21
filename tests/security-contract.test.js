@@ -81,7 +81,7 @@ function assertMutationAuthorized(script, scriptName, callbackName) {
   assertBefore(
     script,
     'If [ $$wvLoginCanEditDelete ≠ 1 ]',
-    'Execute FileMaker Data API',
+    'Execute FileMaker Data API [ Select ; Target: $result ; $request ]',
     `${scriptName} must reject unauthorized calls before mutation.`
   );
   assertBefore(
