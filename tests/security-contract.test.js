@@ -40,6 +40,28 @@ function assertNotContains(script, needle, label) {
   );
 }
 
+function assertBetween(script, earlier, middle, later, label) {
+  const earlierIndex = script.indexOf(earlier);
+  const middleIndex = script.indexOf(middle);
+  const laterIndex = script.lastIndexOf(later);
+  assert(
+    earlierIndex >= 0,
+    `${label}: missing earlier marker ${JSON.stringify(earlier)}`
+  );
+  assert(
+    middleIndex >= 0,
+    `${label}: missing middle marker ${JSON.stringify(middle)}`
+  );
+  assert(
+    laterIndex >= 0,
+    `${label}: missing later marker ${JSON.stringify(later)}`
+  );
+  assert(
+    earlierIndex < middleIndex && middleIndex < laterIndex,
+    `${label}: ${JSON.stringify(middle)} must appear between ${JSON.stringify(earlier)} and the final ${JSON.stringify(later)}`
+  );
+}
+
 function testLoginValidateEstablishesTrustedSession() {
   const script = readScript('LoginValidate.txt');
 
@@ -64,8 +86,8 @@ function testReadScriptsRequireTrustedLogin() {
 function testGetDataStripsPasswordsBeforeCallback() {
   const script = readScript('GetData.txt');
 
-  assertBefore(script, 'JSONDeleteElement', 'receiveDataFromFileMaker', 'GetData sanitizes Data API response before Web Viewer callback');
-  assertBefore(script, 'fieldData.パスワード', 'receiveDataFromFileMaker', 'GetData removes password field before Web Viewer callback');
+  assertBetween(script, 'Execute FileMaker Data API', 'JSONDeleteElement', 'receiveDataFromFileMaker', 'GetData sanitizes Data API response before Web Viewer callback');
+  assertBetween(script, 'Execute FileMaker Data API', 'fieldData.パスワード', 'receiveDataFromFileMaker', 'GetData removes password field before Web Viewer callback');
 }
 
 function testCapabilitiesUseTrustedLoginState() {
