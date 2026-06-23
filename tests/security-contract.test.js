@@ -102,10 +102,21 @@ function testCapabilitiesUseTrustedLoginState() {
 }
 
 function testMutationsRequireTrustedEditDeleteBeforeDataApi() {
-  ['UpdateEmployeeDataAPI.txt', 'DeleteRecord.txt'].forEach((name) => {
-    const script = readScript(name);
-    assertBefore(script, '$$wvLoginCanEditDelete', 'Execute FileMaker Data API', `${name} checks trusted edit/delete capability before mutation`);
-  });
+  const updateScript = readScript('UpdateEmployeeDataAPI.txt');
+  assertBefore(
+    updateScript,
+    '$$wvLoginCanEditDelete',
+    '[ "action" ; "update" ; JSONString ]',
+    'UpdateEmployeeDataAPI checks trusted edit/delete capability before building mutation request'
+  );
+
+  const deleteScript = readScript('DeleteRecord.txt');
+  assertBefore(
+    deleteScript,
+    '$$wvLoginCanEditDelete',
+    '[ "action" ; "delete" ; JSONString ]',
+    'DeleteRecord checks trusted edit/delete capability before building mutation request'
+  );
 }
 
 testLoginValidateEstablishesTrustedSession();
