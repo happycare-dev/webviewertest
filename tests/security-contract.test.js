@@ -5,8 +5,18 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const scriptsDir = path.join(root, ' FileMakerScripts');
 
+function stripFileMakerComments(source) {
+  return source
+    .split(/\r?\n/)
+    .filter((line) => {
+      const trimmed = line.trimStart();
+      return !trimmed.startsWith('#') && !trimmed.startsWith('//');
+    })
+    .join('\n');
+}
+
 function readScript(name) {
-  return fs.readFileSync(path.join(scriptsDir, name), 'utf8');
+  return stripFileMakerComments(fs.readFileSync(path.join(scriptsDir, name), 'utf8'));
 }
 
 function assertContains(script, needle, label) {
