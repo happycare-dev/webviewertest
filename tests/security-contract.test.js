@@ -41,6 +41,15 @@ function assertBefore(text, earlier, later, message) {
   assert(earlierIndex < laterIndex, message);
 }
 
+function assertOrdered(text, patterns, message) {
+  let cursor = 0;
+  patterns.forEach((pattern) => {
+    const match = text.slice(cursor).match(pattern);
+    assert(match, `${message}: missing pattern ${pattern}`);
+    cursor += match.index + match[0].length;
+  });
+}
+
 const loginValidate = uncommented(readScript('LoginValidate.txt'));
 const getData = uncommented(readScript('GetData.txt'));
 const getLocations = uncommented(readScript('GetLocations.txt'));
@@ -67,11 +76,14 @@ assertBefore(
   /Execute FileMaker Data API/,
   'GetData must fail closed before reading EmployeeM data'
 );
-assertBefore(
+assertOrdered(
   getData,
-  /JSONDeleteElement[\s\S]*パスワード/,
-  /Perform JavaScript in Web Viewer/,
-  'GetData must strip employee passwords before returning Data API results to JavaScript'
+  [
+    /Execute FileMaker Data API/,
+    /JSONDeleteElement[\s\S]*パスワード/,
+    /Perform JavaScript in Web Viewer/
+  ],
+  'GetData must strip employee passwords before returning Data API results to JavaScript on the authenticated read path'
 );
 
 assertContains(getLocations, /\$\$wvLoginAccount/, 'GetLocations must require a successful Web Viewer login');
