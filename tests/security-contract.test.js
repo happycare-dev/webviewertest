@@ -99,7 +99,7 @@ assertOrdered(
     /Else/,
     /Set Variable \[ \$loginAccount ; Value: JSONGetElement\s*\(\s*\$result\s*;\s*"response\.data\[0\]\.fieldData\.アカウント"\s*\) \]/,
     /Set Variable \[ \$loginPrivilege ; Value: JSONGetElement\s*\(\s*\$result\s*;\s*"response\.data\[0\]\.fieldData\.アクセス権セット"\s*\) \]/,
-    /Set Variable \[ \$loginCanEditDelete ; Value: Case\s*\([\s\S]*\$loginPrivilege/,
+    /Set Variable \[ \$loginCanEditDelete ; Value: Case\s*\([\s\S]*?\$loginPrivilege[\s\S]*?\) \]/,
     /Set Variable \[ \$\$wvLoginAccount ; Value: \$loginAccount \]/,
     /Set Variable \[ \$\$wvLoginPrivilegeSet ; Value: \$loginPrivilege \]/,
     /Set Variable \[ \$\$wvLoginCanEditDelete ; Value: \$loginCanEditDelete \]/,
