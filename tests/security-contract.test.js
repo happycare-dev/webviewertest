@@ -62,11 +62,50 @@ assertContains(loginValidate, /\$\$wvLoginAccount/, 'LoginValidate must reset/se
 assertContains(loginValidate, /\$\$wvLoginPrivilegeSet/, 'LoginValidate must reset/set trusted login privilege state');
 assertContains(loginValidate, /\$\$wvLoginCanEditDelete/, 'LoginValidate must reset/set trusted edit/delete capability state');
 assertContains(loginValidate, /fieldData\.アクセス権セット/, 'LoginValidate must derive privilege from the EmployeeM login record');
+assertNotContains(
+  loginValidate,
+  /Get\s*\(\s*AccountPrivilegeSetName\s*\)/,
+  'LoginValidate must not derive Web Viewer permissions from the FileMaker file account'
+);
 assertBefore(
   loginValidate,
   /Set Variable \[ \$\$wvLoginAccount ; Value: "" \]/,
   /Execute FileMaker Data API/,
   'LoginValidate must clear prior trusted login state before validating a new login'
+);
+
+const passwordCheckIndex = indexOfPattern(loginValidate, /If \[ not Exact\s*\(\s*\$storedPw\s*;\s*\$password\s*\)\s*\]/);
+assert.notStrictEqual(passwordCheckIndex, -1, 'LoginValidate must compare the submitted password before setting trusted state');
+const beforePasswordCheck = loginValidate.slice(0, passwordCheckIndex);
+assertNotContains(
+  beforePasswordCheck,
+  /Set Variable \[ \$\$wvLoginAccount ; Value: (?!"" \])/,
+  'LoginValidate must not set a trusted login account before password validation succeeds'
+);
+assertNotContains(
+  beforePasswordCheck,
+  /Set Variable \[ \$\$wvLoginPrivilegeSet ; Value: (?!"" \])/,
+  'LoginValidate must not set a trusted login privilege before password validation succeeds'
+);
+assertNotContains(
+  beforePasswordCheck,
+  /Set Variable \[ \$\$wvLoginCanEditDelete ; Value: (?!False \])/,
+  'LoginValidate must not grant edit/delete before password validation succeeds'
+);
+assertOrdered(
+  loginValidate,
+  [
+    /If \[ not Exact\s*\(\s*\$storedPw\s*;\s*\$password\s*\)\s*\]/,
+    /Else/,
+    /Set Variable \[ \$loginAccount ; Value: JSONGetElement\s*\(\s*\$result\s*;\s*"response\.data\[0\]\.fieldData\.アカウント"\s*\) \]/,
+    /Set Variable \[ \$loginPrivilege ; Value: JSONGetElement\s*\(\s*\$result\s*;\s*"response\.data\[0\]\.fieldData\.アクセス権セット"\s*\) \]/,
+    /Set Variable \[ \$loginCanEditDelete ; Value: Case\s*\([\s\S]*\$loginPrivilege/,
+    /Set Variable \[ \$\$wvLoginAccount ; Value: \$loginAccount \]/,
+    /Set Variable \[ \$\$wvLoginPrivilegeSet ; Value: \$loginPrivilege \]/,
+    /Set Variable \[ \$\$wvLoginCanEditDelete ; Value: \$loginCanEditDelete \]/,
+    /Set Variable \[ \$loginSuccess ; Value: 1 \]/
+  ],
+  'LoginValidate must set trusted state only in the successful password-validation branch'
 );
 
 assertContains(getData, /\$\$wvLoginAccount/, 'GetData must require a successful Web Viewer login');
@@ -80,10 +119,16 @@ assertOrdered(
   getData,
   [
     /Execute FileMaker Data API/,
-    /JSONDeleteElement[\s\S]*パスワード/,
+    /Set Variable \[ \$i ; Value: 0 \]/,
+    /Set Variable \[ \$count ; Value: ValueCount\s*\(\s*JSONListKeys\s*\(\s*\$result\s*;\s*"response\.data"\s*\)\s*\) \]/,
+    /Loop \[ Flush: Always \]/,
+    /Exit Loop If \[ \$i ≥ \$count \]/,
+    /JSONDeleteElement\s*\(\s*\$result\s*;\s*"response\.data\["\s*&\s*\$i\s*&\s*"\]\.fieldData\.パスワード"\s*\)/,
+    /Set Variable \[ \$i ; Value: \$i \+ 1 \]/,
+    /End Loop/,
     /Perform JavaScript in Web Viewer/
   ],
-  'GetData must strip employee passwords before returning Data API results to JavaScript on the authenticated read path'
+  'GetData must strip employee passwords from every returned row before sending results to JavaScript'
 );
 
 assertContains(getLocations, /\$\$wvLoginAccount/, 'GetLocations must require a successful Web Viewer login');
