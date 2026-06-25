@@ -73,6 +73,18 @@ assertBefore(
   /Execute FileMaker Data API/,
   'LoginValidate must clear prior trusted login state before validating a new login'
 );
+assertBefore(
+  loginValidate,
+  /Set Variable \[ \$\$wvLoginPrivilegeSet ; Value: "" \]/,
+  /Execute FileMaker Data API/,
+  'LoginValidate must clear prior trusted privilege state before validating a new login'
+);
+assertBefore(
+  loginValidate,
+  /Set Variable \[ \$\$wvLoginCanEditDelete ; Value: False \]/,
+  /Execute FileMaker Data API/,
+  'LoginValidate must clear prior trusted edit/delete capability before validating a new login'
+);
 
 const passwordCheckIndex = indexOfPattern(loginValidate, /If \[ not Exact\s*\(\s*\$storedPw\s*;\s*\$password\s*\)\s*\]/);
 assert.notStrictEqual(passwordCheckIndex, -1, 'LoginValidate must compare the submitted password before setting trusted state');
