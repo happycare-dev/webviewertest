@@ -39,9 +39,10 @@ function assertLoginStateContract() {
     '$$wvLoginPrivilegeSet',
     '$$wvLoginCanEditDelete'
   ].forEach((globalName) => {
+    const clearToEmpty = `Set Variable [ ${globalName} ; Value: "" ]`;
+    const clearToZero = `Set Variable [ ${globalName} ; Value: 0 ]`;
     assert(
-      new RegExp(`Set Variable \\[ \\${globalName.replace('$', '\\$')} ; Value: "" \\]`).test(text) ||
-        new RegExp(`Set Variable \\[ \\${globalName.replace('$', '\\$')} ; Value: 0 \\]`).test(text),
+      text.includes(clearToEmpty) || text.includes(clearToZero),
       `LoginValidate must clear ${globalName} before validating credentials`
     );
   });
