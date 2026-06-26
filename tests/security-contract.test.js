@@ -41,9 +41,20 @@ function assertLoginStateContract() {
   ].forEach((globalName) => {
     const clearToEmpty = `Set Variable [ ${globalName} ; Value: "" ]`;
     const clearToZero = `Set Variable [ ${globalName} ; Value: 0 ]`;
+    const clearIdxs = [text.indexOf(clearToEmpty), text.indexOf(clearToZero)]
+      .filter((idx) => idx !== -1);
     assert(
-      text.includes(clearToEmpty) || text.includes(clearToZero),
+      clearIdxs.length > 0,
       `LoginValidate must clear ${globalName} before validating credentials`
+    );
+    const dataApiIdx = indexOfRequired(
+      text,
+      'Execute FileMaker Data API',
+      `LoginValidate ${globalName} clear ordering`
+    );
+    assert(
+      Math.min.apply(Math, clearIdxs) < dataApiIdx,
+      `LoginValidate must clear ${globalName} before credential lookup`
     );
   });
 
