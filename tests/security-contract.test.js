@@ -89,12 +89,12 @@ function assertReadScriptsRequireLogin() {
 
 function assertPasswordNeverReturned() {
   const text = executableText('GetData.txt');
-  assertBefore(
-    text,
-    'JSONDeleteElement',
-    'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker"',
-    'GetData password stripping'
-  );
+  const dataApiIdx = indexOfRequired(text, 'Execute FileMaker Data API', 'GetData password stripping');
+  const deleteIdx = indexOfRequired(text, 'JSONDeleteElement', 'GetData password stripping');
+  const finalCallbackIdx = text.lastIndexOf('Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker"');
+  assert.notStrictEqual(finalCallbackIdx, -1, 'GetData password stripping is missing final receiveDataFromFileMaker callback');
+  assert(dataApiIdx < deleteIdx, 'GetData must strip passwords after the Data API response is available');
+  assert(deleteIdx < finalCallbackIdx, 'GetData must strip passwords before returning Data API results');
   assert(
     /fieldData\.パスワード/.test(text),
     'GetData must explicitly remove fieldData.パスワード before returning Data API results'
