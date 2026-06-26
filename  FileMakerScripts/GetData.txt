@@ -7,6 +7,11 @@ Set Variable [ $limit ; Value: JSONGetElement ( $json ; "limit" ) ]
 Set Variable [ $sortField ; Value: JSONGetElement ( $json ; "sortField" ) ]
 Set Variable [ $sortOrder ; Value: JSONGetElement ( $json ; "sortOrder" ) ]
 Set Variable [ $locationFilter ; Value: JSONGetElement ( $json ; "locationFilter" ) ]
+If [ IsEmpty ( $$wvLoginAccount ) ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "Login required" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
 Set Variable [ $request ; Value: JSONSetElement ( "" ;         [ "layouts" ; "EmployeeM" ; JSONString ] ;         [ "offset"  ; $offset      ; JSONNumber ] ;         [ "limit"   ; $limit       ; JSONNumber ]     ) ]
 If [ not IsEmpty (  $sortField ) ]
 	Set Variable [ $request ; Value: JSONSetElement( 	$request; 	[ "sort[0].fieldName"; $sortField; JSONString ]; 	[ "sort[0].sortOrder"; $sortOrder; JSONString ] ) ]
@@ -18,6 +23,13 @@ End If
 // Show Custom Dialog [ "fieldData keys" ; $firstRecord ]
 # 
 Execute FileMaker Data API [ Select ; Target: $result ; $request ]
+Set Variable [ $i ; Value: 0 ]
+Set Variable [ $count ; Value: ValueCount ( JSONListKeys ( $result ; "response.data" ) ) ]
+Loop [ Flush: Always ]
+	Exit Loop If [ $i ≥ $count ]
+	Set Variable [ $result ; Value: JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" ) ]
+	Set Variable [ $i ; Value: $i + 1 ]
+End Loop
 # 
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
 Exit Script [ Text Result: True ]
