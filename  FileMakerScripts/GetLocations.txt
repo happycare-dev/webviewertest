@@ -1,5 +1,10 @@
 # GetLocations in file WebViewerTest
 
+If [ IsEmpty ( $$wvLoginAccount ) ]
+	Set Variable [ $json ; Value: JSONSetElement ( "{\"locations\":[]}" ; [ "error" ; "login_required" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLocations" ; Parameters: $json ]
+	Exit Script [ Text Result: False ]
+End If
 Set Variable [ $raw ; Value: ExecuteSQL( 	"SELECT DISTINCT \"事業所略称\" FROM \"EmployeeM\" ORDER BY \"事業所略称\"" 	; "" 	; "¶" ) ]
 # 
 Set Variable [ $json ; Value: "{\"locations\":[]}" ]
