@@ -5,8 +5,9 @@
 # Get(LayoutAccess) requires FileMaker 18 or later; on older versions, remove the layoutAccess JSONSetElement line.
 
 Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
-	[ "accountName" ; Get ( AccountName ) ; JSONString ] ;
-	[ "privilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
+	[ "accountName" ; $$wvLoginAccount ; JSONString ] ;
+	[ "privilegeSetName" ; $$wvLoginPrivilegeSet ; JSONString ] ;
+	[ "canEditDelete" ; $$wvLoginCanEditDelete ; JSONBoolean ] ;
 	[ "extendedPrivilegesRaw" ; Get ( AccountExtendedPrivileges ) ; JSONString ]
 ) ]
 Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "recordAccess" ; Get ( RecordAccess ) ; JSONNumber ] ) ]

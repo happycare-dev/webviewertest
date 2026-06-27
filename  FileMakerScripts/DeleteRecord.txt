@@ -22,6 +22,12 @@
 # Web Viewer からのパラメータ JSON: { "recordId": "1132" }
 # recordId = Data API の内部レコード ID（apiRecordId）。業務キー ID ではない。
 
+If [ $$wvLoginCanEditDelete ≠ True ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "not authorized" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDeleteResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
 #

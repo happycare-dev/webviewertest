@@ -12,6 +12,8 @@
       locationFilter: '',
       pendingDeleteId: null,
       editingRow: null,
+      dataRequestSeq: 0,
+      activeDataRequestId: '',
       canEditDelete: false
     },
     FIELD_MAP: {
