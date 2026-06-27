@@ -7,7 +7,10 @@
   EV.runFileMakerScript = function (offset, limit) {
     EV.clearRowHighlight();
     state.offset = offset || 0;
+    state.dataRequestSeq += 1;
+    state.activeDataRequestId = String(state.dataRequestSeq);
     var param = JSON.stringify({
+      requestId: state.activeDataRequestId,
       offset: state.offset,
       limit: limit || DEFAULT_LIMIT,
       sortField: FIELD_MAP[state.sortKey] || '氏名',
@@ -60,6 +63,16 @@
     } catch (e) {
       console.error('receiveDataFromFileMaker: JSON parse error', e);
       return;
+    }
+
+    if (state.activeDataRequestId) {
+      if (parsed.webViewerRequestId == null) {
+        console.warn('receiveDataFromFileMaker: missing request id; ignoring stale-prone response');
+        return;
+      }
+      if (String(parsed.webViewerRequestId) !== String(state.activeDataRequestId)) {
+        return;
+      }
     }
 
     var records = [];
