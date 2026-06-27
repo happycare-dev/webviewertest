@@ -56,9 +56,9 @@ test('LoginValidate resets stale trusted globals before lookup and sets them onl
 
   const successIndex = script.indexOf('Set Variable [ $loginSuccess ; Value: 1 ]');
   assert.notEqual(successIndex, -1, 'LoginValidate must have an explicit success point');
-  const accountIndex = script.indexOf('Set Variable [ $$wvLoginAccount ; Value:');
-  const privilegeIndex = script.indexOf('Set Variable [ $$wvLoginPrivilegeSet ; Value:');
-  const canEditIndex = script.indexOf('Set Variable [ $$wvLoginCanEditDelete ; Value:');
+  const accountIndex = script.indexOf('Set Variable [ $$wvLoginAccount ; Value:', successIndex);
+  const privilegeIndex = script.indexOf('Set Variable [ $$wvLoginPrivilegeSet ; Value:', successIndex);
+  const canEditIndex = script.indexOf('Set Variable [ $$wvLoginCanEditDelete ; Value:', successIndex);
   assert(accountIndex > successIndex, 'trusted account must be set only after validation succeeds');
   assert(privilegeIndex > successIndex, 'trusted privilege set must be set only after validation succeeds');
   assert(canEditIndex > successIndex, 'edit/delete capability must be set only after validation succeeds');
@@ -212,7 +212,7 @@ test('Web Viewer ignores older GetData callbacks after a newer request is issued
   assert.notEqual(firstRequest.requestId, secondRequest.requestId, 'requestIds must be unique');
 
   sandbox.window.receiveDataFromFileMaker(dataPayload(firstRequest.requestId, 'Old Page', 'old-record'));
-  assert.deepEqual(EV.state.rows, [], 'stale first response must not replace current rows');
+  assert.equal(EV.state.rows.length, 0, 'stale first response must not replace current rows');
 
   sandbox.window.receiveDataFromFileMaker(dataPayload(secondRequest.requestId, 'Current Page', 'current-record'));
   assert.equal(EV.state.rows.length, 1);
