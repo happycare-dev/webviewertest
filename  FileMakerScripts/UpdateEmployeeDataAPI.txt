@@ -8,6 +8,19 @@
 # into JSONSetElement ... JSONObject. Building fieldData from each key avoids that.
 
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
+Set Variable [ $priv ; Value: Get ( AccountPrivilegeSetName ) ]
+Set Variable [ $allow ; Value: Case (
+	$priv = "[Full Access]" ; True ;
+	$priv = "Admin" ; True ;
+	$priv = "Manager" ; True ;
+	False
+) ]
+If [ not $allow ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "unauthorized" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveUpdateResult" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
+#
 Set Variable [ $recordId ; Value: JSONGetElement ( $param ; "recordId" ) ]
 #
 If [ IsEmpty ( $recordId ) ]
