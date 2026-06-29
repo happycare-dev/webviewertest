@@ -63,6 +63,51 @@ function assertAfter(text, needle, anchor, label) {
   );
 }
 
+function assertOrderAfter(text, anchor, earlier, later, label) {
+  const anchorIndex = text.indexOf(anchor);
+  assert.notStrictEqual(
+    anchorIndex,
+    -1,
+    `${label || 'script'} should include anchor text: ${anchor}`
+  );
+  const earlierIndex = text.indexOf(earlier, anchorIndex + anchor.length);
+  const laterIndex = text.indexOf(later, anchorIndex + anchor.length);
+  assert.notStrictEqual(
+    earlierIndex,
+    -1,
+    `${label || 'script'} should include "${earlier}" after "${anchor}"`
+  );
+  assert.notStrictEqual(
+    laterIndex,
+    -1,
+    `${label || 'script'} should include "${later}" after "${anchor}"`
+  );
+  assert(
+    earlierIndex < laterIndex,
+    `${label || 'script'} should place "${earlier}" before "${later}" after "${anchor}"`
+  );
+}
+
+function assertGuardExits(text, guard, label) {
+  const start = text.indexOf(guard);
+  assert.notStrictEqual(
+    start,
+    -1,
+    `${label || 'script'} should include guard: ${guard}`
+  );
+  const end = text.indexOf('End If', start + guard.length);
+  assert.notStrictEqual(
+    end,
+    -1,
+    `${label || 'script'} should close guard: ${guard}`
+  );
+  const block = text.slice(start, end);
+  assert(
+    block.includes('Exit Script [ Text Result: False ]'),
+    `${label || 'script'} should exit false inside guard: ${guard}`
+  );
+}
+
 const tests = [];
 
 function test(name, fn) {
@@ -88,16 +133,20 @@ test('read scripts require a trusted login before returning EmployeeM data', () 
   const getData = activeScript('GetData.txt');
   const getLocations = activeScript('GetLocations.txt');
 
+  assertGuardExits(getData, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'GetData');
   assertBefore(getData, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'Execute FileMaker Data API', 'GetData');
+  assertOrderAfter(getData, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'Exit Script [ Text Result: False ]', 'Execute FileMaker Data API', 'GetData');
+
+  assertGuardExits(getLocations, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'GetLocations');
   assertBefore(getLocations, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'ExecuteSQL', 'GetLocations');
-  assertBefore(getLocations, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'Perform JavaScript in Web Viewer', 'GetLocations');
+  assertOrderAfter(getLocations, 'If [ IsEmpty ( $$wvLoginAccount ) ]', 'Exit Script [ Text Result: False ]', 'ExecuteSQL', 'GetLocations');
 });
 
 test('GetData strips password fields before invoking the Web Viewer callback', () => {
   const script = activeScript('GetData.txt');
 
   assertBefore(script, 'Execute FileMaker Data API', 'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )', 'GetData');
-  assertBefore(script, 'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )', 'Exit Script [ Text Result: True ]', 'GetData');
+  assertOrderAfter(script, 'Execute FileMaker Data API', 'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )', 'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker"', 'GetData');
 });
 
 test('capability and security info scripts use authenticated employee state, not the opening FileMaker account', () => {
@@ -119,8 +168,11 @@ test('mutation scripts enforce authenticated edit/delete capability before Data 
     ['DeleteRecord.txt', '"action" ; "delete"']
   ].forEach(([name, action]) => {
     const script = activeScript(name);
+    assertGuardExits(script, 'If [ $$wvLoginCanEditDelete ≠ True ]', name);
     assertBefore(script, 'If [ $$wvLoginCanEditDelete ≠ True ]', action, name);
     assertBefore(script, 'If [ $$wvLoginCanEditDelete ≠ True ]', 'Execute FileMaker Data API', name);
+    assertOrderAfter(script, 'If [ $$wvLoginCanEditDelete ≠ True ]', 'Exit Script [ Text Result: False ]', action, name);
+    assertOrderAfter(script, 'If [ $$wvLoginCanEditDelete ≠ True ]', 'Exit Script [ Text Result: False ]', 'Execute FileMaker Data API', name);
   });
 });
 
