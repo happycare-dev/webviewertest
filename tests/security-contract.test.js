@@ -97,7 +97,7 @@ test('GetData strips password fields before invoking the Web Viewer callback', (
   const script = activeScript('GetData.txt');
 
   assertBefore(script, 'Execute FileMaker Data API', 'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )', 'GetData');
-  assertBefore(script, 'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )', 'Perform JavaScript in Web Viewer', 'GetData');
+  assertBefore(script, 'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )', 'Exit Script [ Text Result: True ]', 'GetData');
 });
 
 test('capability and security info scripts use authenticated employee state, not the opening FileMaker account', () => {
