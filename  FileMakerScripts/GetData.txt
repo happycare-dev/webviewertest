@@ -21,7 +21,7 @@ If [ not IsEmpty( $locationFilter ) and $locationFilter ≠ "?" ]
 End If
 // Set Variable [ $firstRecord ; Value: JSONGetElement ( $result ; "response.data[0].fieldData" ) ]
 // Show Custom Dialog [ "fieldData keys" ; $firstRecord ]
-# 
+#
 Execute FileMaker Data API [ Select ; Target: $result ; $request ]
 # 
 Set Variable [ $rowCount ; Value: JSONGetElement ( $result ; "response.dataInfo.returnedCount" ) ]
