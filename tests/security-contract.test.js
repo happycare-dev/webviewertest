@@ -32,6 +32,20 @@ function assertBefore(text, first, second, message) {
   );
 }
 
+function assertBetweenLast(text, first, middle, last, message) {
+  const firstIndex = text.indexOf(first);
+  const middleIndex = text.indexOf(middle);
+  const lastIndex = text.lastIndexOf(last);
+
+  assert.notEqual(firstIndex, -1, `${message}\nMissing first marker: ${first}`);
+  assert.notEqual(middleIndex, -1, `${message}\nMissing middle marker: ${middle}`);
+  assert.notEqual(lastIndex, -1, `${message}\nMissing last marker: ${last}`);
+  assert.ok(
+    firstIndex < middleIndex && middleIndex < lastIndex,
+    `${message}\nExpected "${middle}" between "${first}" and final "${last}"`
+  );
+}
+
 function assertNotIncludes(text, needle, message) {
   assert.equal(text.includes(needle), false, `${message}\nUnexpected: ${needle}`);
 }
@@ -84,8 +98,9 @@ function assertNotIncludes(text, needle, message) {
     'Execute FileMaker Data API',
     'GetData must reject unauthenticated Web Viewer calls before reading EmployeeM.'
   );
-  assertBefore(
+  assertBetweenLast(
     text,
+    'Execute FileMaker Data API',
     'JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" )',
     'Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker"',
     'GetData must remove password fields before returning EmployeeM records to JavaScript.'
