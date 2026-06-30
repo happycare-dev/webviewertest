@@ -31,6 +31,6 @@ Loop [ Flush: Always ]
 	Set Variable [ $result ; Value: JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" ) ]
 	Set Variable [ $i ; Value: $i + 1 ]
 End Loop
-# 
+#
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
 Exit Script [ Text Result: True ]
