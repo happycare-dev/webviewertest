@@ -1,6 +1,11 @@
 # GetData in file WebViewerTest
 
 Set Variable [ $json ; Value: Get ( ScriptParameter ) ]
+If [ IsEmpty ( $$wvLoginAccount ) ]
+	Set Variable [ $result ; Value: JSONSetElement ( "{}" ; [ "messages[0].code" ; "9" ; JSONString ] ; [ "messages[0].message" ; "login required" ; JSONString ] ; [ "response.data" ; "[]" ; JSONArray ] ; [ "response.dataInfo.foundCount" ; 0 ; JSONNumber ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
+	Exit Script [ Text Result: False ]
+End If
 Set Variable [ $offset ; Value: JSONGetElement ( $json ; "offset" ) + 1 ]
 // Set Variable [ $limit ; Value: Int( JSONGetElement( $json; "limit" ) / 2 ) ]
 Set Variable [ $limit ; Value: JSONGetElement ( $json ; "limit" ) ]
@@ -19,5 +24,13 @@ End If
 # 
 Execute FileMaker Data API [ Select ; Target: $result ; $request ]
 # 
+Set Variable [ $rowCount ; Value: ValueCount ( JSONListKeys ( $result ; "response.data" ) ) ]
+Set Variable [ $i ; Value: 0 ]
+Loop [ Flush: Always ]
+	Exit Loop If [ $i ≥ $rowCount ]
+	Set Variable [ $result ; Value: JSONDeleteElement ( $result ; "response.data[" & $i & "].fieldData.パスワード" ) ]
+	Set Variable [ $i ; Value: $i + 1 ]
+End Loop
+#
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
 Exit Script [ Text Result: True ]

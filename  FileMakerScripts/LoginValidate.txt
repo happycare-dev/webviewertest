@@ -13,6 +13,9 @@
 Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $account ; Value: JSONGetElement ( $param ; "account" ) ]
 Set Variable [ $password ; Value: JSONGetElement ( $param ; "password" ) ]
+Set Variable [ $$wvLoginAccount ; Value: "" ]
+Set Variable [ $$wvLoginPrivilegeSet ; Value: "" ]
+Set Variable [ $$wvLoginCanEditDelete ; Value: 0 ]
 
 # 0 = 失敗（レイアウト移動しない）、1 = すべて合格
 Set Variable [ $loginSuccess ; Value: 0 ]
@@ -40,6 +43,8 @@ Else
 	If [ IsEmpty ( $foundCount ) or GetAsNumber ( $foundCount ) < 1 ]
 		Set Variable [ $errorCode ; Value: "no_account" ]
 	Else
+		Set Variable [ $loginAccount ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.アカウント" ) ]
+		Set Variable [ $loginPrivilegeSet ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.アクセス権セット" ) ]
 		Set Variable [ $flag ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.在籍フラグ" ) ]
 		Set Variable [ $storedPw ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.パスワード" ) ]
 		# --- 在籍のみ ---
@@ -50,6 +55,9 @@ Else
 			If [ not Exact ( $storedPw ; $password ) ]
 				Set Variable [ $errorCode ; Value: "wrong_password" ]
 			Else
+				Set Variable [ $$wvLoginAccount ; Value: $loginAccount ]
+				Set Variable [ $$wvLoginPrivilegeSet ; Value: $loginPrivilegeSet ]
+				Set Variable [ $$wvLoginCanEditDelete ; Value: Case ( $loginPrivilegeSet = "[Full Access]" ; 1 ; $loginPrivilegeSet = "Admin" ; 1 ; $loginPrivilegeSet = "Manager" ; 1 ; 0 ) ]
 				Set Variable [ $loginSuccess ; Value: 1 ]
 			End If
 		End If
