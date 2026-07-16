@@ -10,6 +10,9 @@
       offset: 0,
       totalCount: 0,
       locationFilter: '',
+      dataRequestSequence: 0,
+      dataRequestSessionId: String(Date.now()) + '-' + Math.random().toString(36).slice(2),
+      latestDataRequestId: '',
       pendingDeleteId: null,
       editingRow: null,
       canEditDelete: false

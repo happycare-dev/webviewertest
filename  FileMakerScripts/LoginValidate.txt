@@ -14,6 +14,11 @@ Set Variable [ $param ; Value: Get ( ScriptParameter ) ]
 Set Variable [ $account ; Value: JSONGetElement ( $param ; "account" ) ]
 Set Variable [ $password ; Value: JSONGetElement ( $param ; "password" ) ]
 
+# Never let a failed or interrupted login reuse the previous employee's identity.
+Set Variable [ $$wvLoginAccount ; Value: "" ]
+Set Variable [ $$wvLoginPrivilegeSet ; Value: "" ]
+Set Variable [ $$wvLoginCanEditDelete ; Value: False ]
+
 # 0 = 失敗（レイアウト移動しない）、1 = すべて合格
 Set Variable [ $loginSuccess ; Value: 0 ]
 Set Variable [ $errorCode ; Value: "" ]
@@ -51,6 +56,14 @@ Else
 				Set Variable [ $errorCode ; Value: "wrong_password" ]
 			Else
 				Set Variable [ $loginSuccess ; Value: 1 ]
+				Set Variable [ $$wvLoginAccount ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.アカウント" ) ]
+				Set Variable [ $$wvLoginPrivilegeSet ; Value: JSONGetElement ( $result ; "response.data[0].fieldData.アクセス権セット" ) ]
+				Set Variable [ $$wvLoginCanEditDelete ; Value: Case (
+					$$wvLoginPrivilegeSet = "[Full Access]" ; True ;
+					$$wvLoginPrivilegeSet = "Admin" ; True ;
+					$$wvLoginPrivilegeSet = "Manager" ; True ;
+					False
+				) ]
 			End If
 		End If
 	End If

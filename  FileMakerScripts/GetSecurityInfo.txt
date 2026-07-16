@@ -5,12 +5,13 @@
 # Get(LayoutAccess) requires FileMaker 18 or later; on older versions, remove the layoutAccess JSONSetElement line.
 
 Set Variable [ $json ; Value: JSONSetElement ( "{}" ;
-	[ "accountName" ; Get ( AccountName ) ; JSONString ] ;
-	[ "privilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
-	[ "extendedPrivilegesRaw" ; Get ( AccountExtendedPrivileges ) ; JSONString ]
+	[ "accountName" ; $$wvLoginAccount ; JSONString ] ;
+	[ "privilegeSetName" ; $$wvLoginPrivilegeSet ; JSONString ] ;
+	[ "canEditDelete" ; $$wvLoginCanEditDelete ; JSONBoolean ] ;
+	[ "extendedPrivilegesRaw" ; "" ; JSONString ]
 ) ]
-Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "recordAccess" ; Get ( RecordAccess ) ; JSONNumber ] ) ]
-Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "layoutAccess" ; Get ( LayoutAccess ) ; JSONNumber ] ) ]
+Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "recordAccess" ; "" ; JSONString ] ) ]
+Set Variable [ $json ; Value: JSONSetElement ( $json ; [ "layoutAccess" ; "" ; JSONString ] ) ]
 
 # Coerce JSON to text for the Web Viewer bridge (JSONSetElement may be JSON type; Data API $result is usually already text).
 Set Variable [ $jsonText ; Value: GetAsText ( $json ) ]
