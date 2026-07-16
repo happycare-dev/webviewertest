@@ -8,7 +8,7 @@
     EV.clearRowHighlight();
     state.offset = offset || 0;
     state.dataRequestSequence += 1;
-    state.latestDataRequestId = String(state.dataRequestSequence);
+    state.latestDataRequestId = state.dataRequestSessionId + '-' + String(state.dataRequestSequence);
     var param = JSON.stringify({
       requestId: state.latestDataRequestId,
       offset: state.offset,
