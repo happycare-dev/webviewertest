@@ -107,6 +107,9 @@ test('capability and security callbacks report validated employee identity', () 
   const info = executableScript('GetSecurityInfo.txt');
   assertContains(info, '$$wvLoginAccount');
   assertContains(info, '$$wvLoginPrivilegeSet');
+  assertNotContains(info, 'Get ( AccountExtendedPrivileges )');
+  assertNotContains(info, 'Get ( RecordAccess )');
+  assertNotContains(info, 'Get ( LayoutAccess )');
 });
 
 test('GetData echoes request identifiers before invoking its callback', () => {
@@ -234,6 +237,22 @@ test('Web Viewer ignores older GetData callbacks after a newer request starts', 
   assert.equal(EV.state.rows.length, 1);
   assert.equal(EV.state.rows[0].fullName, 'Current Page');
   assert.equal(EV.state.rows[0].apiRecordId, 'current-record');
+});
+
+test('GetData request identifiers remain unique across Web Viewer reloads', () => {
+  const firstPage = createViewerSandbox();
+  const secondPage = createViewerSandbox();
+
+  firstPage.sandbox.window.EV.runFileMakerScript(0, 50);
+  secondPage.sandbox.window.EV.runFileMakerScript(0, 50);
+
+  const firstRequest = JSON.parse(firstPage.calls[0].param);
+  const secondRequest = JSON.parse(secondPage.calls[0].param);
+  assert.notEqual(
+    firstRequest.requestId,
+    secondRequest.requestId,
+    'a delayed callback from a prior page instance must not match the current request',
+  );
 });
 
 let failures = 0;
