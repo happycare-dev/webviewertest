@@ -33,6 +33,6 @@ Loop [ Flush: Always ]
 	Set Variable [ $i ; Value: $i + 1 ]
 End Loop
 Set Variable [ $result ; Value: JSONSetElement ( $result ; [ "webViewerRequestId" ; $requestId ; JSONString ] ) ]
-# 
+#
 Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveDataFromFileMaker" ; Parameters: $result ]
 Exit Script [ Text Result: True ]
