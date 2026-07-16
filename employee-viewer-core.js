@@ -10,6 +10,8 @@
       offset: 0,
       totalCount: 0,
       locationFilter: '',
+      dataRequestSequence: 0,
+      latestDataRequestId: '',
       pendingDeleteId: null,
       editingRow: null,
       canEditDelete: false
