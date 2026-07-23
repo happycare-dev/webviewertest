@@ -73,6 +73,15 @@ test('the login page rejects an empty password before calling FileMaker', () => 
   assert.equal(elements.password.focused, true);
 });
 
+test('the login page still submits a non-empty password', () => {
+  const { calls } = loadLoginPage(' active-user ', 'secret');
+
+  assert.deepEqual(calls, [{
+    name: 'LoginValidate',
+    payload: '{"account":"active-user","password":"secret"}'
+  }]);
+});
+
 test('LoginValidate rejects an empty password before querying EmployeeM', () => {
   const script = fs.readFileSync(
     path.join(root, ' FileMakerScripts', 'LoginValidate.txt'),
@@ -80,12 +89,12 @@ test('LoginValidate rejects an empty password before querying EmployeeM', () => 
   );
   const guard = script.indexOf('If [ IsEmpty ( $password ) ]');
   const query = script.indexOf('Execute FileMaker Data API');
+  const exit = script.indexOf('Exit Script [ Text Result: False ]', guard);
+  const endIf = script.indexOf('End If', exit);
 
   assert.notEqual(guard, -1, 'missing server-side empty-password guard');
-  assert.ok(guard < query, 'empty-password guard must run before EmployeeM lookup');
-  assert.match(
-    script.slice(guard, query),
-    /Exit Script \[ Text Result: False \]/,
-    'empty-password guard must terminate the login attempt'
+  assert.ok(
+    guard < exit && exit < endIf && endIf < query,
+    'empty-password branch must terminate before EmployeeM lookup'
   );
 });
