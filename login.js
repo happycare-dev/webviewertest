@@ -1,6 +1,7 @@
 /* Login page for FileMaker Web Viewer (Login layout). Calls script LoginValidate. */
 (function () {
   var ALERT_EMPTY_ACCOUNT = 'アカウントを入力してください。';
+  var ALERT_EMPTY_PASSWORD = 'パスワードを入力してください。';
   var ALERT_WRONG_PASSWORD = 'パスワードが正しくありません。';
   var ALERT_NO_ACCOUNT = '該当するアカウントがありません。';
   var ALERT_NOT_ACTIVE = '在籍でないためログインできません。';
@@ -148,6 +149,11 @@
       setFeedback('error', ALERT_EMPTY_ACCOUNT);
       // tryAlert(ALERT_EMPTY_ACCOUNT);
       accEl.focus();
+      return;
+    }
+    if (!password) {
+      setFeedback('error', ALERT_EMPTY_PASSWORD);
+      pwdEl.focus();
       return;
     }
 

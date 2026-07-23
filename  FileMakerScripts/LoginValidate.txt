@@ -19,6 +19,14 @@ Set Variable [ $loginSuccess ; Value: 0 ]
 Set Variable [ $errorCode ; Value: "" ]
 Set Variable [ $apiMsg ; Value: "" ]
 
+# Empty passwords can exactly match uninitialized EmployeeM password fields.
+# Reject before the lookup so blank credentials can never authenticate.
+If [ IsEmpty ( $password ) ]
+	Set Variable [ $out ; Value: JSONSetElement ( "{}" ; [ "ok" ; False ; JSONBoolean ] ; [ "error" ; "wrong_password" ; JSONString ] ) ]
+	Perform JavaScript in Web Viewer [ Object Name: "web" ; Function Name: "receiveLoginResult" ; Parameters: GetAsText ( $out ) ]
+	Exit Script [ Text Result: False ]
+End If
+
 # 従業員マスタをアカウントで検索（先頭1件）
 Set Variable [ $request ; Value: JSONSetElement ( "" ; [ "layouts" ; "EmployeeM" ; JSONString ] ; [ "limit" ; 1 ; JSONNumber ] ; [ "offset" ; 1 ; JSONNumber ] ; [ "query[0].アカウント" ; $account ; JSONString ] ) ]
 Execute FileMaker Data API [ Select ; Target: $result ; $request ]
