@@ -2,7 +2,8 @@
 #
 # Web Viewer（オブジェクト名 web）からのパラメータ JSON:
 #   { "account": "...", "password": "..." }
-# 検証: EmployeeM の「アカウント」一致、在籍フラグ=1、パスワード一致 → のみレイアウト「WebViewerTest」へ移動。
+# 検証: EmployeeM の「アカウント」を == 検索＋Exact で完全一致、在籍フラグ=1、パスワード一致 → のみレイアウト「WebViewerTest」へ移動。
+# 空アカウントは検索前に拒否（FileMaker の空 Find は全件に落ち得る）。
 # 失敗時は receiveLoginResult に JSON（GetAsText 推奨）。レイアウト移動は $loginSuccess = 1 のときのみ 1 か所で実行。
 #
 # 前提:

@@ -57,9 +57,17 @@ test('LoginValidate Exact-checks the returned account before accepting a passwor
     'If [ not Exact ( $storedAccount ; $account ) ]',
     storedAccount
   );
+  const mismatchError = script.indexOf(
+    'Set Variable [ $errorCode ; Value: "no_account" ]',
+    exactAccount
+  );
+  const elseIfActive = script.indexOf(
+    'Else If [ GetAsNumber ( $flag ) ≠ 1 ]',
+    mismatchError
+  );
   const passwordExact = script.indexOf(
     'If [ not Exact ( $storedPw ; $password ) ]',
-    exactAccount
+    elseIfActive
   );
   const loginSuccess = script.indexOf(
     'Set Variable [ $loginSuccess ; Value: 1 ]',
@@ -67,10 +75,18 @@ test('LoginValidate Exact-checks the returned account before accepting a passwor
   );
 
   assert.notEqual(storedAccount, -1, 'must capture the returned account field');
+  assert.notEqual(exactAccount, -1, 'must Exact-check returned account');
+  assert.notEqual(elseIfActive, -1, 'account mismatch must use Else If, not fall-through');
   assert.ok(
     storedAccount < exactAccount &&
-      exactAccount < passwordExact &&
+      exactAccount < mismatchError &&
+      mismatchError < elseIfActive &&
+      elseIfActive < passwordExact &&
       passwordExact < loginSuccess,
-    'returned account must Exact-match the submitted account before password acceptance'
+    'account Exact failure must set no_account and Else If away from password acceptance'
+  );
+  assert.ok(
+    loginSuccess === -1 || loginSuccess > elseIfActive,
+    'loginSuccess must not be set in the account-mismatch arm'
   );
 });
